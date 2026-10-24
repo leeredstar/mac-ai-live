@@ -72,8 +72,15 @@ def rule_reply(name, user, text, action):
 class Studio:
     def __init__(self, data):
         self.data = data
-        for directory in (data, data / "media", data / "audio"):
+        for directory in (data, data / "media", data / "audio", data / "source"):
             directory.mkdir(parents=True, exist_ok=True)
+        self.source_dir = data / "source"
+        for old_source in self.source_dir.iterdir():
+            if old_source.is_file():
+                old_source.unlink(missing_ok=True)
+        self.source_info = None
+        self.source_path = None
+        self.clip_lock = threading.Lock()
         self.lock = threading.RLock()
         self.changed = threading.Condition(self.lock)
         self.cancel = threading.Event()
@@ -124,7 +131,7 @@ class Studio:
                     "history": [dict(j) for j in self.history], "server_time": time.time(),
                     "capabilities": {"tts": bool(shutil.which("say") and shutil.which("afconvert")),
                                      "ffprobe": bool(shutil.which("ffprobe")),
-                                     "douyin": False, "gpu": False}}
+                                     "douyin": False, "gpu": False, "clipper": True, "version": "0.3.0"}}
 
     def submit(self, payload):
         user = clean(payload.get("user", "观众"), 24)
@@ -344,18 +351,19 @@ class Handler(BaseHTTPRequestHandler):
         # Avoid writing viewer messages or query strings into terminal logs.
         pass
 
-    def allowed(self):
+    def allowed(self, read_only=False):
         expected = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
         if self.headers.get("Host") not in expected:
             self.send_json({"error": "只允许本机访问"}, 403)
             return False
-        origin = self.headers.get("Origin")
-        if origin and origin not in {"http://" + host for host in expected}:
-            self.send_json({"error": "不允许跨站请求"}, 403)
-            return False
-        if self.headers.get("Sec-Fetch-Site") == "cross-site":
-            self.send_json({"error": "不允许跨站请求"}, 403)
-            return False
+        if not read_only:
+            origin = self.headers.get("Origin")
+            if origin and origin not in {"http://" + host for host in expected}:
+                self.send_json({"error": "不允许跨站请求"}, 403)
+                return False
+            if self.headers.get("Sec-Fetch-Site") == "cross-site":
+                self.send_json({"error": "不允许跨站请求"}, 403)
+                return False
         return True
 
     def headers_for(self, status, content_type, length=None):
@@ -375,7 +383,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(raw)
 
     def do_GET(self):
-        if not self.allowed():
+        if not self.allowed(read_only=True):
             return
         path = unquote(urlparse(self.path).path)
         if path == "/api/state":
@@ -400,6 +408,10 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_file(ROOT / "static" / ("index.html" if path == "/" else "stage.html"))
         if path.startswith("/static/"):
             base, relative = ROOT / "static", path[8:]
+        elif path.startswith("/source/"):
+            if not self.studio.source_info or path != self.studio.source_info["url"]:
+                return self.send_json({"error": "素材源不存在"}, 404)
+            return self.send_file(self.studio.source_path)
         elif path.startswith("/media/"):
             base, relative = self.studio.data / "media", path[7:]
         elif path.startswith("/audio/"):
@@ -466,7 +478,15 @@ class Handler(BaseHTTPRequestHandler):
         try:
             path = urlparse(self.path).path
             length = int(self.headers.get("Content-Length", "0"))
+            if path == "/api/source":
+                return self.upload_source(length)
             if path.startswith("/api/media/") and path != "/api/media/remove":
+                if path == "/api/media/clip":
+                    if not 0 < length <= 32768 or self.headers.get("Content-Type", "").split(";")[0] != "application/json":
+                        self.close_connection = True
+                        return self.send_json({"error": "请求无效"}, 415)
+                    payload = json.loads(self.rfile.read(length))
+                    return self.make_clip(payload)
                 return self.upload(path.rsplit("/", 1)[-1], length)
             if not 0 < length <= 32768:
                 self.close_connection = True
@@ -493,6 +513,10 @@ class Handler(BaseHTTPRequestHandler):
                         self.studio.persist("media", self.studio.media)
                         self.studio.notify()
                 result = {"ok": True}
+            elif path == "/api/source/remove":
+                with self.studio.clip_lock:
+                    self.remove_source()
+                result = {"ok": True}
             else:
                 return self.send_json({"error": "未找到接口"}, 404)
             return self.send_json(result)
@@ -502,6 +526,124 @@ class Handler(BaseHTTPRequestHandler):
         except (OSError, sqlite3.Error):
             self.close_connection = True
             return self.send_json({"error": "本地文件或数据库操作失败，请检查磁盘空间"}, 500)
+
+    def remove_source(self):
+        if self.studio.source_path:
+            self.studio.source_path.unlink(missing_ok=True)
+        self.studio.source_path = None
+        self.studio.source_info = None
+
+    def upload_source(self, length):
+        if not 0 < length <= MAX_UPLOAD:
+            self.close_connection = True
+            raise ValueError("素材无效或超过 150 MB")
+        suffix = Path(unquote(self.headers.get("X-Filename", ""))).suffix.lower()
+        if suffix not in (".mp4", ".webm"):
+            self.close_connection = True
+            raise ValueError("请选择 MP4 或 WebM 视频")
+        if not shutil.which("ffprobe"):
+            self.close_connection = True
+            raise ValueError("验证视频需要 FFmpeg，请先运行 brew install ffmpeg")
+        file = self.studio.source_dir / (uuid.uuid4().hex + suffix)
+        try:
+            with file.open("wb") as dest:
+                remaining = length
+                while remaining:
+                    block = self.rfile.read(min(65536, remaining))
+                    if not block:
+                        raise ValueError("上传中断，请重新选择视频")
+                    remaining -= len(block)
+                    dest.write(block)
+            with file.open("rb") as source:
+                header = source.read(32)
+            if not ((suffix == ".mp4" and b"ftyp" in header) or
+                    (suffix == ".webm" and header.startswith(b"\x1aE\xdf\xa3"))):
+                raise ValueError("文件不是有效的 MP4/WebM")
+            result = subprocess.run(["ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe",
+                "-show_entries", "format=duration:stream=codec_type,codec_name,width,height", "-of", "json", str(file)],
+                capture_output=True, timeout=15)
+            info = json.loads(result.stdout)
+            video = next((s for s in info.get("streams", []) if s.get("codec_type") == "video"), None)
+            duration = float(info.get("format", {}).get("duration", 0))
+            if (result.returncode or not video or not math.isfinite(duration) or not 0.1 <= duration <= 1800 or
+                    int(video.get("width") or 0) <= 0 or int(video.get("height") or 0) <= 0):
+                raise ValueError("视频必须包含画面，时长不超过 30 分钟")
+            if suffix == ".mp4" and video.get("codec_name") != "h264":
+                raise ValueError("MP4 请使用 H.264 编码")
+            if suffix == ".webm" and video.get("codec_name") not in ("vp8", "vp9", "av1"):
+                raise ValueError("WebM 请使用 VP8、VP9 或 AV1 编码")
+            source_id = uuid.uuid4().hex
+            with self.studio.clip_lock:
+                self.remove_source()
+                self.studio.source_path = file
+                self.studio.source_info = {"id": source_id, "url": "/source/" + file.name,
+                    "name": clean(unquote(self.headers.get("X-Filename", "素材")), 100),
+                    "duration": duration, "width": video.get("width"), "height": video.get("height")}
+            self.send_json({k: v for k, v in self.studio.source_info.items()})
+        except (ValueError, KeyError, subprocess.TimeoutExpired, json.JSONDecodeError):
+            file.unlink(missing_ok=True)
+            raise ValueError("视频校验失败：请使用不超过 30 分钟的 H.264 MP4 或标准 WebM")
+
+    def make_clip(self, payload):
+        if not isinstance(payload, dict):
+            raise ValueError("请求必须为对象")
+        action = payload.get("action")
+        start, end = payload.get("start"), payload.get("end")
+        if action not in ACTIONS or action == "idle":
+            raise ValueError("请选择一个动作")
+        if not self.studio.source_info or payload.get("source_id") != self.studio.source_info["id"]:
+            raise ValueError("请先导入视频素材")
+        try:
+            start, end = float(start), float(end)
+        except (TypeError, ValueError):
+            raise ValueError("请检查片段起止时间")
+        duration = end - start
+        if (not math.isfinite(start) or not math.isfinite(end) or start < 0 or
+                duration < 0.25 or duration > 120 or end > self.studio.source_info["duration"]):
+            raise ValueError("片段需为 0.25–120 秒，并位于原视频范围内")
+        if not shutil.which("ffmpeg"):
+            raise ValueError("剪辑需要 FFmpeg，请先运行 brew install ffmpeg")
+        if not self.studio.clip_lock.acquire(blocking=False):
+            raise ValueError("另一个片段正在处理中，请稍后再试")
+        file = self.studio.data / "media" / (uuid.uuid4().hex + ".mp4")
+        try:
+            source = self.studio.source_path
+            source_info = dict(self.studio.source_info)
+            scale = min(1, 1280 / source_info["width"], 720 / source_info["height"])
+            width = max(2, int(source_info["width"] * scale) // 2 * 2)
+            height = max(2, int(source_info["height"] * scale) // 2 * 2)
+            result = subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.3f}", "-i", str(source),
+                "-t", f"{duration:.3f}", "-map", "0:v:0", "-an", "-vf", f"scale={width}:{height}",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p",
+                "-movflags", "+faststart", str(file)], capture_output=True, timeout=240)
+            if result.returncode or not file.is_file() or file.stat().st_size > MAX_UPLOAD:
+                raise ValueError("本机剪辑失败；请检查视频格式、剩余空间和 FFmpeg")
+            probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration:stream=codec_type,codec_name,width,height",
+                "-of", "json", str(file)], capture_output=True, timeout=15)
+            info = json.loads(probe.stdout)
+            video = next((s for s in info.get("streams", []) if s.get("codec_type") == "video"), None)
+            clip_duration = float(info.get("format", {}).get("duration", 0))
+            if (probe.returncode or not video or video.get("codec_name") != "h264" or
+                    not math.isfinite(clip_duration) or not 0.1 <= clip_duration <= 120):
+                raise ValueError("生成的视频片段校验失败")
+            media = {"url": "/media/" + file.name, "name": clean(source_info["name"], 100) + " · 剪辑",
+                "duration": clip_duration, "width": video.get("width"), "height": video.get("height")}
+            with self.studio.lock:
+                self.studio.media[action] = media
+                self.studio.persist("media", self.studio.media)
+                self.studio.notify()
+            return self.send_json(media)
+        except subprocess.TimeoutExpired:
+            file.unlink(missing_ok=True)
+            raise ValueError("处理超时，请缩短片段后重试")
+        except (KeyError, TypeError, json.JSONDecodeError):
+            file.unlink(missing_ok=True)
+            raise ValueError("视频片段处理失败")
+        except ValueError:
+            file.unlink(missing_ok=True)
+            raise
+        finally:
+            self.studio.clip_lock.release()
 
     def upload(self, action, length):
         if action not in ACTIONS or not 0 < length <= MAX_UPLOAD:
@@ -565,7 +707,7 @@ def main():
     server.daemon_threads = True
     server.studio = studio
     url = f"http://127.0.0.1:{args.port}"
-    print(f"\n  Mac AI Live  v0.1.0\n  工作台 {url}\n  直播画面 {url}/stage\n  本地运行 · 不使用 GPU · 按 Ctrl+C 退出\n", flush=True)
+    print(f"\n  Mac AI Live  v0.3.0\n  工作台 {url}\n  直播画面 {url}/stage\n  本地运行 · 不使用 GPU · 按 Ctrl+C 退出\n", flush=True)
     if args.open:
         webbrowser.open(url)
     def stop(signum, frame):

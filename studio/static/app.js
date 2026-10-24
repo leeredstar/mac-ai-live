@@ -4,7 +4,7 @@ const labels = {idle:'待机',talk:'说话',eat:'吃一口',drink:'喝水',wave:
 const icons = {idle:'✳',talk:'☏',eat:'🍪',drink:'☕',wave:'👋',laugh:'☺',nod:'✓'};
 const descriptions = {idle:'自然呼吸、看向镜头。循环播放。',talk:'轻微说话动作。循环播放，不生成实时口型。',eat:'拿起食物、吃一口，再回到待机姿势。',drink:'拿起杯子、喝水、放下杯子。',wave:'向观众打个招呼。',laugh:'一个轻松、自然的笑容。',nod:'认真听到后的回应。'};
 const statuses = {queued:'已放行',pending:'待审核',active:'表演中',done:'已完成',cancelled:'已取消',rejected:'已跳过',failed:'失败'};
-let latest = null, settingsLoaded = false, assetSignature = '', toastTimer;
+let latest = null, settingsLoaded = false, assetSignature = '', toastTimer, sourceAsset = null;
 function el(tag, cls, text) { const node = document.createElement(tag); if(cls) node.className = cls; if(text !== undefined) node.textContent = text; return node; }
 function toast(text, error=false) { const node=$('#toast'); node.textContent=text; node.className='toast visible'+(error?' error':''); clearTimeout(toastTimer); toastTimer=setTimeout(()=>node.classList.remove('visible'),4000); }
 async function api(path, payload) {
@@ -72,11 +72,39 @@ function renderAssets(data){
     card.append(visual,el('h3','',labels[action]),el('p','',descriptions[action]),el('div','asset-filename',media?`${media.name} · ${media.duration.toFixed(1)} 秒`:'尚未导入素材'),controls);return card;
   }));
 }
+function updateClipForm(){
+  const start=Number($('#clip-start').value),end=Number($('#clip-end').value);
+  $('#clip-save').disabled=!sourceAsset||!Number.isFinite(start)||!Number.isFinite(end)||start<0||end-start<.25||end-start>120||end>sourceAsset.duration;
+}
+function showSource(source){
+  sourceAsset=source;const video=$('#source-video');
+  if(source){video.src=source.url;video.classList.add('has-source');$('#source-status').textContent=`${source.name} · ${source.duration.toFixed(1)} 秒`;$('#source-remove').classList.remove('hidden');$('#clip-start').value='0';$('#clip-end').value=Math.min(3,source.duration).toFixed(1);}
+  else{video.pause();video.removeAttribute('src');video.load();video.classList.remove('has-source');$('#source-status').textContent='MP4 或 WebM，最长 30 分钟、150 MB';$('#source-remove').classList.add('hidden');}
+  updateClipForm();
+}
+$('#source-pick').addEventListener('click',()=>$('#source-file').click());
+$('#source-file').addEventListener('change',async()=>{
+  const source=$('#source-file').files[0];if(!source)return;
+  if(source.size>150*1024*1024){toast('视频不能超过 150 MB',true);$('#source-file').value='';return;}
+  const button=$('#source-pick');button.disabled=true;button.textContent='正在导入…';$('#clip-save').disabled=true;
+  const result=await attempt(async()=>{const response=await fetch('/api/source',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Filename':encodeURIComponent(source.name)},body:source});const data=await response.json();if(!response.ok)throw new Error(data.error||'导入失败');return data;});
+  if(result){showSource(result);toast('原视频已保存在本机，可以开始标记片段');}
+  button.disabled=false;button.textContent='选择原视频';$('#source-file').value='';updateClipForm();
+});
+$('#source-remove').addEventListener('click',async()=>{const result=await attempt(()=>api('/api/source/remove',{}));if(result)showSource(null);});
+document.querySelectorAll('[data-mark]').forEach(button=>button.addEventListener('click',()=>{if(!sourceAsset)return;const field=$('#clip-'+button.dataset.mark);field.value=$('#source-video').currentTime.toFixed(1);updateClipForm();}));
+$('#clip-start').addEventListener('input',updateClipForm);$('#clip-end').addEventListener('input',updateClipForm);
+$('#clip-save').addEventListener('click',async()=>{
+  if(!sourceAsset)return;const action=$('#clip-action').value,button=$('#clip-save');button.disabled=true;button.textContent='本机正在剪辑…';
+  const result=await attempt(()=>api('/api/media/clip',{source_id:sourceAsset.id,action,start:$('#clip-start').value,end:$('#clip-end').value}));
+  if(result){assetSignature='';if(latest){latest.media[action]=result;renderAssets(latest);}toast(labels[action]+'动作片段已生成并保存到本机');}
+  button.textContent='剪成动作片段';updateClipForm();
+});
 function fillSettings(config){Object.entries(config).forEach(([key,value])=>{const field=$('#setting-'+key);if(!field)return;if(field.type==='checkbox')field.checked=value;else field.value=value;});updateSettingLabels();settingsLoaded=true;}
 function updateSettingLabels(){$('#rate-label').textContent=$('#setting-rate').value+' 字/分钟';$('#volume-label').textContent=Math.round($('#setting-volume').value*100)+'%';$('#ollama-fields').classList.toggle('hidden',$('#setting-engine').value!=='ollama');}
 $('#settings-form').addEventListener('input',updateSettingLabels);
 $('#settings-form').addEventListener('submit',async event=>{event.preventDefault();const button=event.submitter;button.disabled=true;const values={};new FormData(event.target).forEach((value,key)=>values[key]=value);['subtitles','auto_approve'].forEach(key=>values[key]=$('#setting-'+key).checked);values.rate=Number(values.rate);values.volume=Number(values.volume);const result=await attempt(()=>api('/api/settings',values));if(result)toast('设置已保存在这台 Mac');button.disabled=false;});
 function renderMediaReadiness(data){const count=Object.keys(data.media).length;$('#readiness-title').textContent=`本地视频素材 ${count}/7 项已就绪`;$('#readiness-copy').textContent=count===0?'现在可排练语音与字幕；没有对应视频时，人物照片保持静止。':`已导入 ${count} 项；缺少对应视频的动作仍会显示静帧。`;document.querySelectorAll('[data-action]').forEach(button=>{const ready=Boolean(data.media[button.dataset.action]);button.classList.toggle('ready-media',ready);button.classList.toggle('missing-media',!ready);button.querySelector('.action-media-status').textContent=ready?`视频已就绪 · ${data.media[button.dataset.action].duration.toFixed(1)} 秒`:'无动作视频';button.title=ready?'已导入本地动作视频':`未导入${labels[button.dataset.action]}视频；放行后仍会回答，但人物照片保持静止。`;});}
-function render(data){latest=data;$('#connection').textContent='本机已连接';$('#connection-dot').classList.remove('error');$('#queue-count').textContent=data.queue.length;$('#pending-hint').textContent=data.config.auto_approve?'自动放行':'手动放行';$('#toggle-run').textContent=data.running?'Ⅱ 暂停排练':'▶ 开始排练';$('#run-dot').classList.toggle('active',data.running);$('#run-label').textContent=data.running?'排练进行中':'排练已暂停';$('#preview-state').textContent={idle:'待机中',thinking:'准备回答',action:'正在'+labels[data.state.action],speaking:'正在互动'}[data.state.phase];$('#description').title=data.config.engine==='rules'?'当前使用规则演示，非通用 AI 问答':'当前使用本地 Ollama';if(!settingsLoaded)fillSettings(data.config);renderMediaReadiness(data);renderQueue(data);renderHistory(data);renderAssets(data);}
+function render(data){latest=data;const canClip=Boolean(data.capabilities?.clipper);$('#version-label').textContent=data.capabilities?.version?'v'+data.capabilities.version+' · 本地动作剪辑':'旧版服务 · 需重启后剪辑';$('#asset-workflow-note').textContent=canClip?'从一条长视频截出待机、吃东西、喝水和说话片段；也可分别导入短视频。':'分别导入同一人物的短视频；当前服务版本不支持本机长视频剪辑。';$('#clipper-card').classList.toggle('hidden',!canClip);$('#connection').textContent='本机已连接';$('#connection-dot').classList.remove('error');$('#queue-count').textContent=data.queue.length;$('#pending-hint').textContent=data.config.auto_approve?'自动放行':'手动放行';$('#toggle-run').textContent=data.running?'Ⅱ 暂停排练':'▶ 开始排练';$('#run-dot').classList.toggle('active',data.running);$('#run-label').textContent=data.running?'排练进行中':'排练已暂停';$('#preview-state').textContent={idle:'待机中',thinking:'准备回答',action:'正在'+labels[data.state.action],speaking:'正在互动'}[data.state.phase];$('#description').title=data.config.engine==='rules'?'当前使用规则演示，非通用 AI 问答':'当前使用本地 Ollama';if(!settingsLoaded)fillSettings(data.config);renderMediaReadiness(data);renderQueue(data);renderHistory(data);renderAssets(data);}
 const stream=new EventSource('/api/events');stream.onmessage=event=>{try{render(JSON.parse(event.data));}catch(error){console.error(error);toast('界面更新失败，请刷新',true);}};stream.onerror=()=>{$('#connection').textContent='本机连接中断，正在重连';$('#connection-dot').classList.add('error');};
 addEventListener('pagehide',()=>stream.close());

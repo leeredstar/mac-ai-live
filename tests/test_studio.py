@@ -118,8 +118,13 @@ class HTTPTests(unittest.TestCase):
         code, _, _ = self.request("/api/control", b'{"command":"start"}',
                                   {"Content-Type": "application/json", "Origin": "https://example.org"})
         self.assertEqual(code, 403)
+        code, _, _ = self.request("/api/control", b'{"command":"start"}',
+                                  {"Content-Type": "application/json", "Sec-Fetch-Site": "cross-site"})
+        self.assertEqual(code, 403)
         code, _, _ = self.request("/api/state", headers={"Host": "example.org"})
         self.assertEqual(code, 403)
+        code, _, _ = self.request("/", headers={"Sec-Fetch-Site": "cross-site"})
+        self.assertEqual(code, 200)
         self.assertFalse(self.studio.running)
 
     def test_paths_and_range(self):
@@ -148,6 +153,31 @@ class HTTPTests(unittest.TestCase):
         code, _, _ = self.request("/api/media/eat", b"this is not a video",
                                   {"Content-Type": "application/octet-stream", "X-Filename": "fake.mp4"})
         self.assertEqual(code, 400)
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg not installed")
+    def test_import_one_video_and_cut_action_clip_locally(self):
+        fixture = Path(self.temp.name) / "long-take.mp4"
+        subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=c=blue:s=320x240:d=2.4",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(fixture)], check=True)
+        code, body, _ = self.request("/api/source", fixture.read_bytes(),
+                                     {"Content-Type": "application/octet-stream", "X-Filename": "long-take.mp4"})
+        self.assertEqual(code, 200, body)
+        source = json.loads(body)
+        code, _, headers = self.request(source["url"], headers={"Range": "bytes=0-15"})
+        self.assertEqual(code, 206)
+        self.assertEqual(headers["Content-Length"], "16")
+        payload = json.dumps({"source_id": source["id"], "action": "wave", "start": 0.4, "end": 1.3}).encode()
+        code, body, _ = self.request("/api/media/clip", payload, {"Content-Type": "application/json"})
+        self.assertEqual(code, 200, body)
+        clip = json.loads(body)
+        self.assertTrue(clip["url"].endswith(".mp4"))
+        self.assertAlmostEqual(clip["duration"], .9, delta=.15)
+        self.assertEqual(self.studio.snapshot()["media"]["wave"], clip)
+        code, body, _ = self.request("/api/source/remove", b"{}", {"Content-Type": "application/json"})
+        self.assertEqual(code, 200, body)
+        code, _, _ = self.request(source["url"])
+        self.assertEqual(code, 404)
+        self.assertIn("wave", self.studio.snapshot()["media"])
 
 
 if __name__ == "__main__":
