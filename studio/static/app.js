@@ -27,8 +27,21 @@ $('#comment-form').addEventListener('submit',async event=>{
 });
 document.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',async()=>{
   const action=button.dataset.action;button.disabled=true;
-  const result=await attempt(()=>api('/api/comments',{user:'场控',text:labels[action]+'，和大家互动一下',action}));
-  if(result)toast(result.status==='pending'?'动作已加入待审队列':'动作已加入表演队列');button.disabled=false;
+  if(!latest?.media?.[action]){
+    setTab('assets');
+    const card=$(`#asset-${action}`);
+    card?.scrollIntoView({behavior:'smooth',block:'center'});
+    toast(`${labels[action]}还没有动作视频，当前照片不会动。请先导入这一动作的本地视频。`,true);
+    button.disabled=false;
+    return;
+  }
+  try{
+    if(!latest.running)await api('/api/control',{command:'start'});
+    const job=await api('/api/comments',{user:'场控',text:labels[action]+'，和大家互动一下',action});
+    if(job.status==='pending')await api('/api/control',{command:'approve',id:job.id});
+    toast('动作已放行；舞台会播放对应的本地视频。');
+  }catch(error){toast(error.message||'动作没有启动，请检查工作台状态',true);}
+  button.disabled=false;
 }));
 $('#toggle-run').addEventListener('click',()=>attempt(()=>api('/api/control',{command:latest?.running?'pause':'start'})));
 $('#interrupt').addEventListener('click',()=>attempt(()=>api('/api/control',{command:'interrupt'})));
@@ -59,7 +72,7 @@ function renderAssets(data){
   const signature=JSON.stringify(data.media);if(assetSignature===signature)return;assetSignature=signature;
   $('#asset-count').textContent=Object.keys(data.media).length;
   $('#asset-grid').replaceChildren(...Object.keys(labels).map(action=>{
-    const media=data.media[action];const card=el('article','asset-card');const visual=el('div','asset-visual');
+    const media=data.media[action];const card=el('article','asset-card');card.id=`asset-${action}`;const visual=el('div','asset-visual');
     if(media){const video=el('video');video.src=media.url;video.muted=true;video.controls=true;video.preload='metadata';visual.append(video);}else{visual.classList.add('asset-still-preview');const still=el('img');still.src=action==='eat'?'/static/character-xiaoman-eat-thumb.jpg':'/static/character-xiaoman-thumb.jpg';still.alt=`原创虚拟角色静态姿态参考；尚未导入${labels[action]}动作视频`;still.loading='eager';still.decoding='async';visual.append(still,el('span','still-badge',action==='eat'?'姿态参考 · 无动作视频':'静帧预览 · 无动作视频'));}
     const controls=el('div','asset-controls');const upload=el('button','button',media?'替换视频':'导入视频');upload.type='button';const file=el('input','hidden');file.type='file';file.accept='video/mp4,video/webm';file.setAttribute('aria-label','导入'+labels[action]+'视频');
     upload.addEventListener('click',()=>file.click());file.addEventListener('change',async()=>{
@@ -104,7 +117,7 @@ function fillSettings(config){Object.entries(config).forEach(([key,value])=>{con
 function updateSettingLabels(){$('#rate-label').textContent=$('#setting-rate').value+' 字/分钟';$('#volume-label').textContent=Math.round($('#setting-volume').value*100)+'%';$('#ollama-fields').classList.toggle('hidden',$('#setting-engine').value!=='ollama');}
 $('#settings-form').addEventListener('input',updateSettingLabels);
 $('#settings-form').addEventListener('submit',async event=>{event.preventDefault();const button=event.submitter;button.disabled=true;const values={};new FormData(event.target).forEach((value,key)=>values[key]=value);['subtitles','auto_approve'].forEach(key=>values[key]=$('#setting-'+key).checked);values.rate=Number(values.rate);values.volume=Number(values.volume);const result=await attempt(()=>api('/api/settings',values));if(result)toast('设置已保存在这台 Mac');button.disabled=false;});
-function renderMediaReadiness(data){const count=Object.keys(data.media).length;$('#readiness-title').textContent=`本地视频素材 ${count}/7 项已就绪`;$('#readiness-copy').textContent=count===0?'现在可排练语音与字幕；没有对应视频时，人物照片保持静止。':`已导入 ${count} 项；缺少对应视频的动作仍会显示静帧。`;document.querySelectorAll('[data-action]').forEach(button=>{const ready=Boolean(data.media[button.dataset.action]);button.classList.toggle('ready-media',ready);button.classList.toggle('missing-media',!ready);button.querySelector('.action-media-status').textContent=ready?`视频已就绪 · ${data.media[button.dataset.action].duration.toFixed(1)} 秒`:'无动作视频';button.title=ready?'已导入本地动作视频':`未导入${labels[button.dataset.action]}视频；放行后仍会回答，但人物照片保持静止。`;});}
+function renderMediaReadiness(data){const count=Object.keys(data.media).length;$('#readiness-title').textContent=`本地视频素材 ${count}/7 项已就绪`;$('#readiness-copy').textContent=count===0?'目前没有动作视频；点击动作会带你去导入对应素材，照片本身不会动。':`已导入 ${count} 项；缺少对应视频的动作仍会显示静帧。`;document.querySelectorAll('[data-action]').forEach(button=>{const ready=Boolean(data.media[button.dataset.action]);button.classList.toggle('ready-media',ready);button.classList.toggle('missing-media',!ready);button.querySelector('.action-media-status').textContent=ready?`视频已就绪 · ${data.media[button.dataset.action].duration.toFixed(1)} 秒`:'无动作视频';button.title=ready?'点击即可排练并播放本地动作视频':`未导入${labels[button.dataset.action]}视频；点击后会打开素材卡，照片不会动。`;});}
 function render(data){latest=data;const canClip=Boolean(data.capabilities?.clipper);$('#version-label').textContent=data.capabilities?.version?'v'+data.capabilities.version+' · 本地动作剪辑':'旧版服务 · 需重启后剪辑';$('#asset-workflow-note').textContent=canClip?'从一条长视频截出待机、吃东西、喝水和说话片段；也可分别导入短视频。':'分别导入同一人物的短视频；当前服务版本不支持本机长视频剪辑。';$('#clipper-card').classList.toggle('hidden',!canClip);$('#connection').textContent='本机已连接';$('#connection-dot').classList.remove('error');$('#queue-count').textContent=data.queue.length;$('#pending-hint').textContent=data.config.auto_approve?'自动放行':'手动放行';$('#toggle-run').textContent=data.running?'Ⅱ 暂停排练':'▶ 开始排练';$('#run-dot').classList.toggle('active',data.running);$('#run-label').textContent=data.running?'排练进行中':'排练已暂停';$('#preview-state').textContent={idle:'待机中',thinking:'准备回答',action:'正在'+labels[data.state.action],speaking:'正在互动'}[data.state.phase];$('#description').title=data.config.engine==='rules'?'当前使用规则演示，非通用 AI 问答':'当前使用本地 Ollama';if(!settingsLoaded)fillSettings(data.config);renderMediaReadiness(data);renderQueue(data);renderHistory(data);renderAssets(data);}
 const stream=new EventSource('/api/events');stream.onmessage=event=>{try{render(JSON.parse(event.data));}catch(error){console.error(error);toast('界面更新失败，请刷新',true);}};stream.onerror=()=>{$('#connection').textContent='本机连接中断，正在重连';$('#connection-dot').classList.add('error');};
 addEventListener('pagehide',()=>stream.close());
