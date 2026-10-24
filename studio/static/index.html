@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css?v=0.3.4"><script defer src="/static/app.js?v=0.3.4"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css?v=0.3.5"><script defer src="/static/app.js?v=0.3.5"></script></head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/"><span class="brand-mark">帧</span><span>小满直播间<small>MAC AI LIVE · LOCAL STUDIO</small></span></a>
@@ -23,10 +23,10 @@
       <div class="left-column">
         <section class="preview-card">
           <div class="card-heading"><div><span class="live-dot"></span> 画面预览 <span class="muted small">PREVIEW</span></div><span class="pill" id="preview-state">待机中</span></div>
-          <div class="preview-wrap"><iframe src="/stage?preview=1" title="数字人直播预览" id="preview"></iframe><span class="preview-tag">原创写实静帧 · 动作由本地视频素材提供</span></div>
+          <div class="preview-wrap"><iframe src="/stage?preview=1" title="数字人直播预览" id="preview"></iframe><span class="preview-tag">离线动作姿态演示 · 视频素材可替换</span></div>
           <div class="transport"><div class="transport-info"><span id="run-dot" class="run-dot"></span><div><strong id="run-label">还没开始排练</strong><small id="run-description">预览静音 · 声音从独立直播窗口播放</small></div></div><button class="button primary" id="toggle-run">▶ 开始排练</button><button class="icon-button" id="interrupt" title="立即停止当前表演" aria-label="立即停止当前表演">■</button></div>
         </section>
-        <section class="quick-card"><div class="card-heading"><strong>给她一个小动作</strong><span class="muted small">有动作视频时，点击即可播放</span></div><div class="action-buttons"><button data-action="wave"><span class="action-icon">👋</span><span class="action-label">挥挥手<small class="action-media-status">正在检查素材</small></span></button><button data-action="eat"><span class="action-icon">🍪</span><span class="action-label">吃一口<small class="action-media-status">正在检查素材</small></span></button><button data-action="drink"><span class="action-icon">☕</span><span class="action-label">喝口水<small class="action-media-status">正在检查素材</small></span></button><button data-action="laugh"><span class="action-icon">☺</span><span class="action-label">笑一笑<small class="action-media-status">正在检查素材</small></span></button><button data-action="nod"><span class="action-icon">✓</span><span class="action-label">点点头<small class="action-media-status">正在检查素材</small></span></button></div><div class="media-readiness"><span class="readiness-mark">▧</span><div><strong id="readiness-title">正在检查本地素材</strong><p id="readiness-copy">没有对应动作视频时，照片不会动；点击动作会带你去补素材。</p></div><button type="button" class="text-button" data-tab="assets">准备素材 →</button></div></section>
+        <section class="quick-card"><div class="card-heading"><strong>给她一个小动作</strong><span class="muted small">点击即排练；有视频时优先播放</span></div><div class="action-buttons"><button data-action="wave"><span class="action-icon">👋</span><span class="action-label">挥挥手<small class="action-media-status">正在检查素材</small></span></button><button data-action="eat"><span class="action-icon">🍪</span><span class="action-label">吃一口<small class="action-media-status">正在检查素材</small></span></button><button data-action="drink"><span class="action-icon">☕</span><span class="action-label">喝口水<small class="action-media-status">正在检查素材</small></span></button><button data-action="laugh"><span class="action-icon">☺</span><span class="action-label">笑一笑<small class="action-media-status">正在检查素材</small></span></button><button data-action="nod"><span class="action-icon">✓</span><span class="action-label">点点头<small class="action-media-status">正在检查素材</small></span></button></div><div class="media-readiness"><span class="readiness-mark">▧</span><div><strong id="readiness-title">正在检查本地素材</strong><p id="readiness-copy">每个动作都可直接排练；内置姿态提供离线演示，导入视频后会更自然。</p></div><button type="button" class="text-button" data-tab="assets">准备素材 →</button></div></section>
         <section class="history-card"><div class="card-heading"><strong>刚刚发生</strong><span class="muted small">最近 12 次互动</span></div><div id="history" class="history-list"><div class="empty">排练开始后，互动记录会留在这里。</div></div></section>
       </div>
       <aside class="interaction-card"><div class="card-heading"><strong>弹幕候场区 <span class="count" id="queue-count">0</span></strong><button class="text-button danger" id="clear">清空</button></div>
@@ -36,7 +36,7 @@
         <div class="queue-footer"><span class="tiny-dot"></span> 一次只表演一条，动作与说话有序衔接</div>
       </aside>
     </div>
-    <div class="bottom-note">✧ 吃东西时先完成动作，再开口回答。当前角色是写实静帧；导入对应视频后才能看到人物动作。</div>
+    <div class="bottom-note">✧ 每个动作都会先在舞台上响应，再播放回答。内置离线姿态是短时演示，不等于连续真人视频。</div>
   </section>
 
   <section class="tab-panel hidden" id="panel-assets">
@@ -77,7 +77,7 @@
       <article class="companion-step"><span class="step-number">04</span><div><h3>先验声音，再决定开播</h3><p>在舞台窗口点一次“启用声音”。观察直播伴侣的声音电平是否随回答变化，并确认没有重复回声。Mac 版本的实际音频选项以你安装的界面为准；预览收不到声音时先别开播。</p></div></article>
       <article class="companion-step"><span class="step-number">05</span><div><h3>检查账号资格与直播标识</h3><p>先在抖音官方预览里确认账号可电脑开播、画面和声音正常。角色是 AI 虚拟形象，保持舞台上的 AI 标识；公开开播由账号所有者在直播伴侣内自行确认。</p></div></article>
     </div>
-    <div class="companion-footer"><strong>当前能力边界</strong><span>本项目不读取真实抖音弹幕、不控制开播，也不把静帧伪装成动作视频。正式直播时由场控手动录入弹幕；没有导入视频的动作会保持静帧。</span><a href="https://streamingtool.douyin.com/docs/guide_window" target="_blank" rel="noopener">查看抖音官方窗口捕获说明 ↗</a></div>
+    <div class="companion-footer"><strong>当前能力边界</strong><span>本项目不读取真实抖音弹幕、不控制开播，也不把姿态演示说成连续视频。正式直播时由场控手动录入弹幕；没有导入视频时会切换内置姿态并标注演示。</span><a href="https://streamingtool.douyin.com/docs/guide_window" target="_blank" rel="noopener">查看抖音官方窗口捕获说明 ↗</a></div>
   </section>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

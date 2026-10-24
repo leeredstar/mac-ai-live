@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parent
 DATA = Path(os.environ.get("MAC_AI_LIVE_DATA", ROOT.parent / "data")).resolve()
 ACTIONS = {"idle": "待机", "talk": "说话", "eat": "吃一口", "drink": "喝水",
            "wave": "挥手", "laugh": "笑一笑", "nod": "点头"}
+ACTION_PREVIEW_SECONDS = {"eat": 3.0, "drink": 3.0, "wave": 2.4, "laugh": 2.0, "nod": 2.0}
 DEFAULTS = {"name": "小满", "voice": "Tingting", "rate": 185, "engine": "rules",
             "model": "qwen2.5:1.5b", "persona": "你是小满，一个坦诚、温暖、有点幽默的 AI 主播。用中文简短回答，不编造现实经历。",
             "volume": 0.8, "subtitles": True, "auto_approve": False}
@@ -135,7 +136,7 @@ class Studio:
                     "history": [dict(j) for j in self.history], "server_time": time.time(),
                     "capabilities": {"tts": bool(shutil.which("say") and shutil.which("afconvert")),
                                      "ffprobe": bool(shutil.which("ffprobe")),
-                                     "douyin": False, "gpu": False, "clipper": True, "version": "0.3.4"}}
+                                     "douyin": False, "gpu": False, "clipper": True, "version": "0.3.5"}}
 
     def submit(self, payload):
         user = clean(payload.get("user", "观众"), 24)
@@ -304,24 +305,24 @@ class Studio:
                 answer = self.reply(job, config)
                 if self.cancel.is_set():
                     raise InterruptedError()
-                audio, duration = self.speech(answer, config, job["id"])
                 with self.lock:
                     job["reply"] = answer
-                if job["action"] in ("eat", "drink"):
+                if job["action"] != "talk":
                     with self.lock:
                         if self.cancel.is_set():
                             raise InterruptedError()
-                        action_duration = self.media.get(job["action"], {}).get("duration", 5)
+                        action_duration = self.media.get(
+                            job["action"], {}).get("duration", ACTION_PREVIEW_SECONDS[job["action"]])
                         self.set_state("action", job["action"], "", None, action_duration)
                     if self.cancel.wait(action_duration):
                         raise InterruptedError()
                 if self.cancel.is_set():
                     raise InterruptedError()
+                audio, duration = self.speech(answer, config, job["id"])
                 with self.lock:
                     if self.cancel.is_set():
                         raise InterruptedError()
-                    action = job["action"] if job["action"] not in ("eat", "drink") else "talk"
-                    self.set_state("speaking", action, answer, audio, duration + 0.5)
+                    self.set_state("speaking", "talk", answer, audio, duration + 0.5)
                 if self.cancel.wait(duration + 0.5):
                     raise InterruptedError()
                 with self.lock:
@@ -423,7 +424,8 @@ class Handler(BaseHTTPRequestHandler):
         else:
             return self.send_json({"error": "未找到"}, 404)
         file = (base / relative).resolve()
-        if file.parent != base.resolve():
+        base_resolved = base.resolve()
+        if file == base_resolved or base_resolved not in file.parents:
             return self.send_json({"error": "未找到"}, 404)
         return self.send_file(file)
 
@@ -711,7 +713,7 @@ def main():
     server.daemon_threads = True
     server.studio = studio
     url = f"http://127.0.0.1:{args.port}"
-    print(f"\n  Mac AI Live  v0.3.4\n  工作台 {url}\n  直播画面 {url}/stage\n  本地运行 · 不使用 GPU · 按 Ctrl+C 退出\n", flush=True)
+    print(f"\n  Mac AI Live  v0.3.5\n  工作台 {url}\n  直播画面 {url}/stage\n  本地运行 · 不使用 GPU · 按 Ctrl+C 退出\n", flush=True)
     if args.open:
         webbrowser.open(url)
     def stop(signum, frame):

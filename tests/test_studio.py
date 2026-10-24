@@ -64,6 +64,19 @@ class StudioTests(unittest.TestCase):
             self.assertEqual(snapshot["state"]["phase"], "idle")
             self.assertEqual(snapshot["queue"][0]["id"], next_job["id"])
 
+    def test_manual_action_enters_offline_pose_phase_without_video(self):
+        with patch.object(self.studio, "speech", return_value=("/audio/test.wav", .01)):
+            job = self.studio.submit({"user": "场控", "text": "挥挥手", "action": "wave"})
+            self.studio.control("approve", job["id"])
+            self.studio.control("start")
+            until(lambda: self.studio.snapshot()["state"]["phase"] == "action")
+            state = self.studio.snapshot()["state"]
+            self.assertEqual(state["action"], "wave")
+            self.assertEqual(state["duration"], 2.4)
+            self.assertEqual(self.studio.snapshot()["media"], {})
+            self.studio.control("interrupt")
+            until(lambda: job["status"] == "cancelled")
+
     def test_duplicate_is_rejected(self):
         self.studio.submit({"user": "测试", "text": "你好"})
         with self.assertRaisesRegex(ValueError, "队列"):
@@ -141,7 +154,7 @@ class HTTPTests(unittest.TestCase):
         code, _, _ = self.request("/audio/../studio.sqlite3")
         self.assertEqual(code, 404)
 
-    def test_generated_character_assets_and_still_action_fallback(self):
+    def test_generated_character_assets_and_offline_pose_fallback(self):
         code, body, headers = self.request("/static/character-xiaoman-v2.png")
         self.assertEqual(code, 200)
         self.assertTrue(body)
@@ -150,10 +163,16 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertTrue(body)
         self.assertEqual(headers.get_content_type(), "image/jpeg")
+        for action_image in ("eat.jpg", "drink.jpg", "wave-a.jpg", "wave-b.jpg",
+                             "wave-portrait-a.jpg", "wave-portrait-b.jpg", "laugh.jpg", "nod.jpg"):
+            code, body, headers = self.request("/static/character-actions/" + action_image)
+            self.assertEqual(code, 200, action_image)
+            self.assertTrue(body, action_image)
+            self.assertEqual(headers.get_content_type(), "image/jpeg")
         code, body, _ = self.request("/stage")
         self.assertEqual(code, 200)
         self.assertIn(b'/static/character-xiaoman-v2.png', body)
-        self.assertNotIn(b'id="action-pose"', body)
+        self.assertIn(b'id="pose-stack"', body)
 
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg not installed")
     def test_import_validate_and_unbind_media(self):
