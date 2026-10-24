@@ -73,7 +73,7 @@ function renderAssets(data){
   $('#asset-count').textContent=Object.keys(data.media).length;
   $('#asset-grid').replaceChildren(...Object.keys(labels).map(action=>{
     const media=data.media[action];const card=el('article','asset-card');card.id=`asset-${action}`;const visual=el('div','asset-visual');
-    if(media){const video=el('video');video.src=media.url;video.muted=true;video.controls=true;video.preload='metadata';visual.append(video);}else{visual.classList.add('asset-still-preview');const still=el('img');still.src=action==='eat'?'/static/character-xiaoman-eat-thumb.jpg':'/static/character-xiaoman-thumb.jpg';still.alt=`原创虚拟角色静态姿态参考；尚未导入${labels[action]}动作视频`;still.loading='eager';still.decoding='async';visual.append(still,el('span','still-badge',action==='eat'?'姿态参考 · 无动作视频':'静帧预览 · 无动作视频'));}
+    if(media){const video=el('video');video.src=media.url;video.muted=true;video.controls=true;video.preload='metadata';visual.append(video);}else{visual.classList.add('asset-still-preview');const still=el('img');still.src='/static/character-xiaoman-v2-thumb.jpg';still.alt=`原创虚拟角色静帧参考；尚未导入${labels[action]}动作视频`;still.loading='eager';still.decoding='async';visual.append(still,el('span','still-badge','静帧预览 · 无动作视频'));}
     const controls=el('div','asset-controls');const upload=el('button','button',media?'替换视频':'导入视频');upload.type='button';const file=el('input','hidden');file.type='file';file.accept='video/mp4,video/webm';file.setAttribute('aria-label','导入'+labels[action]+'视频');
     upload.addEventListener('click',()=>file.click());file.addEventListener('change',async()=>{
       const source=file.files[0];if(!source)return;if(source.size>150*1024*1024){toast('视频不能超过 150 MB',true);return;}
