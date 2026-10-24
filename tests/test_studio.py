@@ -74,8 +74,12 @@ class StudioTests(unittest.TestCase):
             self.studio.settings({"name": "不该保存", "rate": 999})
         self.assertEqual(self.studio.config["name"], "小满")
 
-    def test_restart_cancels_incomplete_history(self):
-        job = self.studio.submit({"text": "待处理的弹幕"})
+    def test_restart_preserves_waiting_jobs_and_cancels_active_work(self):
+        pending = self.studio.submit({"text": "待处理的弹幕"})
+        active = {**pending, "id": "active-copy", "text": "退出时正在表演", "status": "active",
+                  "created": pending["created"] + .1}
+        self.studio.history.appendleft(active)
+        self.studio.save_job(active)
         self.studio.settings({"name": "恢复测试"})
         self.studio.closed = True
         with self.studio.changed:
@@ -85,9 +89,11 @@ class StudioTests(unittest.TestCase):
         self.studio = Studio(Path(self.temp.name))
         snapshot = self.studio.snapshot()
         self.assertEqual(snapshot["config"]["name"], "恢复测试")
-        self.assertEqual(snapshot["history"][0]["id"], job["id"])
+        self.assertEqual(snapshot["history"][0]["id"], "active-copy")
         self.assertEqual(snapshot["history"][0]["status"], "cancelled")
-        self.assertEqual(snapshot["queue"], [])
+        self.assertEqual(snapshot["queue"][0]["id"], pending["id"])
+        self.assertEqual(snapshot["queue"][0]["status"], "pending")
+        self.assertFalse(snapshot["running"])
 
 
 class HTTPTests(unittest.TestCase):

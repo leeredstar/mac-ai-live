@@ -103,11 +103,15 @@ class Studio:
             self.media.update(json.loads(stored["media"]))
         self.history = collections.deque((json.loads(row[0]) for row in self.db.execute(
             "SELECT value FROM history ORDER BY rowid DESC LIMIT 60")), maxlen=60)
+        recoverable = []
         for row in self.history:
-            if row["status"] in ("queued", "pending", "active"):
+            if row["status"] in ("queued", "pending"):
+                recoverable.append(row)
+            elif row["status"] == "active":
                 row["status"] = "cancelled"
-                row["error"] = "上次退出时未完成，请重新提交"
+                row["error"] = "上次退出时正在表演；请重新提交"
                 self.save_job(row)
+        self.jobs.extend(sorted(recoverable, key=lambda row: row["created"]))
         self.thread = threading.Thread(target=self.work, daemon=True)
         self.thread.start()
 
@@ -131,7 +135,7 @@ class Studio:
                     "history": [dict(j) for j in self.history], "server_time": time.time(),
                     "capabilities": {"tts": bool(shutil.which("say") and shutil.which("afconvert")),
                                      "ffprobe": bool(shutil.which("ffprobe")),
-                                     "douyin": False, "gpu": False, "clipper": True, "version": "0.3.0"}}
+                                     "douyin": False, "gpu": False, "clipper": True, "version": "0.3.1"}}
 
     def submit(self, payload):
         user = clean(payload.get("user", "观众"), 24)
@@ -707,7 +711,7 @@ def main():
     server.daemon_threads = True
     server.studio = studio
     url = f"http://127.0.0.1:{args.port}"
-    print(f"\n  Mac AI Live  v0.3.0\n  工作台 {url}\n  直播画面 {url}/stage\n  本地运行 · 不使用 GPU · 按 Ctrl+C 退出\n", flush=True)
+    print(f"\n  Mac AI Live  v0.3.1\n  工作台 {url}\n  直播画面 {url}/stage\n  本地运行 · 不使用 GPU · 按 Ctrl+C 退出\n", flush=True)
     if args.open:
         webbrowser.open(url)
     def stop(signum, frame):
