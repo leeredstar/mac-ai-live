@@ -55,6 +55,8 @@ function updateVideo(data) {
   const state = data.state;
   const slot = state.phase === 'speaking' ? state.action : state.phase === 'action' ? state.action : 'idle';
   const media = data.media[slot] || (slot !== 'idle' ? data.media.idle : null);
+  document.querySelector('#action-pose').classList.toggle('active',
+    state.phase === 'action' && state.action === 'eat' && !data.media.eat && !data.media.idle);
   const key = media ? `${media.url}:${state.job_id || ''}:${state.phase}` : '';
   if (key === visualKey) return;
   visualKey = key;
@@ -91,14 +93,15 @@ function render(data) {
   document.body.dataset.action = data.state.action;
   document.body.dataset.phase = data.state.phase;
   document.querySelector('#stage-name').textContent = data.config.name + '的片刻';
-  document.querySelector('#mode-badge').textContent = Object.keys(data.media).length ? '本地动作素材' : '原创写实角色 · 静帧演示';
+  document.querySelector('#mode-badge').textContent = data.state.phase === 'action' && data.state.action === 'eat' && !data.media.eat && !data.media.idle
+    ? '姿态静帧 · 无连续动作' : Object.keys(data.media).length ? '本地动作素材' : '原创写实角色 · 静帧演示';
   document.querySelector('#subtitle').textContent = data.config.subtitles ? data.state.text : '';
   document.querySelector('#stage-message').textContent = data.state.phase === 'thinking' ? '看见你的弹幕了…' : '';
   const activeJob = data.state.job_id && data.history.find(job => job.id === data.state.job_id);
   const labels = {
     idle: ['今晚聊什么', '下班后，陪你坐一会儿。', '发一条弹幕；放行后会播放语音和可用的动作素材。'],
     thinking: ['正在看弹幕', '想一想怎么回答…', '当前使用本地规则回答；后续可以替换成模型接口。'],
-    action: ['正在表演', data.state.action === 'eat' ? '小满正在吃一口' : data.state.action === 'drink' ? '小满正在喝水' : '小满正在回应动作', '动作来自已导入的视频素材；没有对应素材时人物照片保持静止。'],
+    action: ['正在表演', data.state.action === 'eat' ? '小满正在吃一口' : data.state.action === 'drink' ? '小满正在喝水' : '小满正在回应动作', data.state.action === 'eat' && !data.media.eat && !data.media.idle ? '这里切换到吃东西的姿态参考图；它仍是静帧，连续动作请导入本地视频。' : '动作来自已导入的视频素材；没有对应素材时人物照片保持静止。'],
     speaking: ['正在回应', `${activeJob?.user || '直播间'}，小满回答你`, '声音与字幕同步；人物只有在导入说话视频时才会动。'],
   };
   const [cardLabel, cardTitle, cardDescription] = labels[data.state.phase] || labels.idle;

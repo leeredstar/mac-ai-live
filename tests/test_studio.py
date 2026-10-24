@@ -141,6 +141,19 @@ class HTTPTests(unittest.TestCase):
         code, _, _ = self.request("/audio/../studio.sqlite3")
         self.assertEqual(code, 404)
 
+    def test_original_eat_pose_assets_are_served(self):
+        code, body, headers = self.request("/static/character-xiaoman-eat.jpg")
+        self.assertEqual(code, 200)
+        self.assertTrue(body)
+        self.assertEqual(headers.get_content_type(), "image/jpeg")
+        code, body, headers = self.request("/static/character-xiaoman-eat-thumb.jpg")
+        self.assertEqual(code, 200)
+        self.assertTrue(body)
+        self.assertEqual(headers.get_content_type(), "image/jpeg")
+        code, body, _ = self.request("/stage")
+        self.assertEqual(code, 200)
+        self.assertIn(b'id="action-pose"', body)
+
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg not installed")
     def test_import_validate_and_unbind_media(self):
         fixture = Path(self.temp.name) / "fixture.mp4"
