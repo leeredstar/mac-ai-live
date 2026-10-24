@@ -15,7 +15,7 @@ async function attempt(fn) { try { return await fn(); } catch(error) { toast(err
 function setTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(panel=>panel.classList.toggle('hidden',panel.id!=='panel-'+tab));
   document.querySelectorAll('.nav-item').forEach(button=>button.classList.toggle('selected',button.dataset.tab===tab));
-  const titles={control:['直播工作台','让每一条弹幕，都有回应。','先排练弹幕、动作和语音，再准备直播素材。'],assets:['角色与动作','为她，准备一点生活感。','导入同一人物的动作视频；没有视频时照片保持静止。'],settings:['声音与回答','熟悉的声音，舒服的节奏。','先用离线演示排练，后续再接入你选择的模型。']};
+  const titles={control:['直播工作台','让每一条弹幕，都有回应。','先排练弹幕、动作和语音，再准备直播素材。'],assets:['角色与动作','为她，准备一点生活感。','导入同一人物的动作视频；没有视频时照片保持静止。'],settings:['声音与回答','熟悉的声音，舒服的节奏。','先用离线演示排练，后续再接入你选择的模型。'],companion:['抖音直播伴侣','让本地舞台，进入直播预览。','跟着步骤完成窗口采集；先检查画面和声音，再由账号所有者确认开播。']};
   $('#page-label').textContent=titles[tab][0];$('#heading').textContent=titles[tab][1];$('#description').textContent=titles[tab][2];
 }
 document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>setTab(button.dataset.tab)));

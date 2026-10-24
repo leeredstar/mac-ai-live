@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css?v=0.3.1"><script defer src="/static/app.js?v=0.3.1"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css?v=0.3.2"><script defer src="/static/app.js?v=0.3.2"></script></head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/"><span class="brand-mark">帧</span><span>小满直播间<small>MAC AI LIVE · LOCAL STUDIO</small></span></a>
@@ -9,6 +9,7 @@
     <button class="nav-item selected" data-tab="control"><span>◉</span> 直播工作台</button>
     <button class="nav-item" data-tab="assets"><span>▧</span> 角色与动作 <i id="asset-count">0</i></button>
     <button class="nav-item" data-tab="settings"><span>☷</span> 声音与回答</button>
+    <button class="nav-item" data-tab="companion"><span>↗</span> 抖音直播伴侣</button>
   </nav>
   <div class="sidebar-note"><span class="tiny-dot"></span> 算力，留在你的 Mac<p>不需要独立显卡。<br>素材和声音都在本地运行。</p><div class="chip">OFFLINE FIRST</div></div>
   <div class="sidebar-bottom"><span class="avatar-mini">满</span><div>我的本地空间<small id="version-label">正在检查版本</small></div><span class="tiny-dot"></span></div>
@@ -64,6 +65,19 @@
       <section class="settings-card"><div class="section-number">02 / RESPONSE</div><h2>先把互动跑顺</h2><label for="setting-engine">回答方式</label><select id="setting-engine" name="engine"><option value="rules">规则演示 · 开箱即用</option><option value="ollama">本地 Ollama · 可选</option></select><div class="field-help engine-note">当前版本优先演示动作与语音。规则模式不具备通用问答能力；后续可替换为模型 API。</div><div id="ollama-fields"><label for="setting-model">已安装的 Ollama 模型名称</label><input id="setting-model" name="model" placeholder="qwen2.5:1.5b"><label for="setting-persona">本地模型人设</label><textarea id="setting-persona" name="persona" rows="3" maxlength="1200"></textarea><p class="field-help">只连接本机 11434 端口，明确使用 CPU；不会自动安装模型或连接云端。</p></div><label class="switch-row"><span>新弹幕自动放行</span><input name="auto_approve" type="checkbox" id="setting-auto_approve"></label><p class="field-help">默认关闭。关闭时，点击“放行”后才会表演。</p></section>
       <div class="save-bar"><span>设置与素材仅存放在本机 data 目录，不会上传 GitHub。</span><button type="submit" class="button primary">保存设置 ✓</button></div>
     </form>
+  </section>
+
+  <section class="tab-panel hidden" id="panel-companion">
+    <div class="companion-banner"><div><div class="eyebrow">DOUYIN LIVE COMPANION · MAC</div><h2>把本地舞台送进直播伴侣</h2><p>本项目负责角色画面、弹幕排练和中文声音；直播伴侣负责采集窗口并推流。</p></div><a class="button primary" href="/stage" target="_blank" rel="noopener">打开独立直播画面 ↗</a></div>
+    <div class="companion-note"><span>●</span><div><strong>Mac 普通视频直播 · 程序窗口采集</strong><p>不需要独立显卡，也不需要进入 PICO/VR 虚拟直播。电脑开播资格由抖音账号决定。</p></div></div>
+    <div class="companion-steps">
+      <article class="companion-step"><span class="step-number">01</span><div><h3>先准备一段本地排练</h3><p>在工作台导入你有权使用的角色动作视频，提交示例弹幕并人工放行。确认舞台画面、字幕和语音都符合预期。</p><button type="button" class="text-button" data-tab="assets">去准备角色动作 →</button></div></article>
+      <article class="companion-step"><span class="step-number">02</span><div><h3>单独打开直播画面</h3><p>点击上方按钮，在 Chrome 里单独打开“小满 · 直播画面”。把这个窗口调整成竖屏构图，全屏显示舞台，避免采集到地址栏或工作台。</p></div></article>
+      <article class="companion-step"><span class="step-number">03</span><div><h3>在伴侣里添加程序窗口</h3><p>登录抖音直播伴侣，进入常规视频直播预览，选择“添加素材 → 程序窗口/窗口捕获”，选刚才打开的 Chrome 舞台窗口。再检查竖屏画布、铺满方式和字幕边缘。</p></div></article>
+      <article class="companion-step"><span class="step-number">04</span><div><h3>先验声音，再决定开播</h3><p>在舞台窗口点一次“启用声音”。观察直播伴侣的声音电平是否随回答变化，并确认没有重复回声。Mac 版本的实际音频选项以你安装的界面为准；预览收不到声音时先别开播。</p></div></article>
+      <article class="companion-step"><span class="step-number">05</span><div><h3>检查账号资格与直播标识</h3><p>先在抖音官方预览里确认账号可电脑开播、画面和声音正常。角色是 AI 虚拟形象，保持舞台上的 AI 标识；公开开播由账号所有者在直播伴侣内自行确认。</p></div></article>
+    </div>
+    <div class="companion-footer"><strong>当前能力边界</strong><span>本项目不读取真实抖音弹幕、不控制开播，也不把静帧伪装成动作视频。正式直播时由场控手动录入弹幕；没有导入视频的动作会保持静帧。</span><a href="https://streamingtool.douyin.com/docs/guide_window" target="_blank" rel="noopener">查看抖音官方窗口捕获说明 ↗</a></div>
   </section>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
