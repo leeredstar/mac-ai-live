@@ -136,7 +136,7 @@ class Studio:
                     "history": [dict(j) for j in self.history], "server_time": time.time(),
                     "capabilities": {"tts": bool(shutil.which("say") and shutil.which("afconvert")),
                                      "ffprobe": bool(shutil.which("ffprobe")),
-                                     "douyin": False, "gpu": False, "clipper": True, "version": "0.4.0"}}
+                                     "douyin": False, "gpu": False, "clipper": True, "version": "0.4.1"}}
 
     def submit(self, payload):
         user = clean(payload.get("user", "观众"), 24)
@@ -713,7 +713,7 @@ def main():
     server.daemon_threads = True
     server.studio = studio
     url = f"http://127.0.0.1:{args.port}"
-    print(f"\n  Mac AI Live  v0.4.0\n  工作台 {url}\n  直播画面 {url}/stage\n  本地运行 · 不使用 GPU · 按 Ctrl+C 退出\n", flush=True)
+    print(f"\n  Mac AI Live  v0.4.1\n  工作台 {url}\n  直播画面 {url}/stage\n  本地运行 · 不使用 GPU · 按 Ctrl+C 退出\n", flush=True)
     if args.open:
         webbrowser.open(url)
     def stop(signum, frame):

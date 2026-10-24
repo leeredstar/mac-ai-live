@@ -174,8 +174,11 @@ class HTTPTests(unittest.TestCase):
         code, body, _ = self.request("/stage")
         self.assertEqual(code, 200)
         self.assertIn(b'/static/character-xiaoman-v3.jpg', body)
-        self.assertIn(b'v=0.4.0', body)
+        self.assertIn(b'v=0.4.1', body)
         self.assertIn(b'id="pose-stack"', body)
+        code, body, _ = self.request("/")
+        self.assertEqual(code, 200)
+        self.assertIn(b'/stage?preview=1&v=0.4.1', body)
 
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg not installed")
     def test_import_validate_and_unbind_media(self):

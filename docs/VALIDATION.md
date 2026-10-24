@@ -1,4 +1,4 @@
-# v0.4.0 原创角色互动姿势与工作台实测
+# v0.4.1 原创角色互动姿势与工作台实测
 
 日期：2026-10-25（Asia/Shanghai）。环境：Apple Silicon Mac、桌面 Chrome；全程不使用 GPU。
 
@@ -10,6 +10,7 @@
 - 挥手使用两张相近画面交替，不是连续视频；吃、喝、点头、微笑和说话也都是预制画面，说话没有实时口型。舞台与工作台均明确显示这一边界。
 - `python3 -m unittest discover -s tests -v`：11 项通过；两份 JavaScript 语法检查、Python 编译与 `git diff --check` 通过。
 - 抖音官方 Mac 文档当前说明：Mac 版支持 macOS 13+、程序窗口采集和开播推流；窗口采集可选浏览器等已打开程序。[Mac 版说明](https://streamingtool.douyin.com/docs/8uxkey2t_mac) · [窗口捕获指南](https://streamingtool.douyin.com/docs/guide_window)
+- 内嵌舞台 iframe 加入版本查询参数，确保更新后的主工作台不会继续展示浏览器缓存的旧角色画面。
 
 ## 仍未验收
 
