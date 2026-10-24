@@ -25,7 +25,7 @@
           <div class="preview-wrap"><iframe src="/stage?preview=1" title="数字人直播预览" id="preview"></iframe><span class="preview-tag">原创写实静帧 · 动作由本地视频素材提供</span></div>
           <div class="transport"><div class="transport-info"><span id="run-dot" class="run-dot"></span><div><strong id="run-label">还没开始排练</strong><small id="run-description">预览静音 · 声音从独立直播窗口播放</small></div></div><button class="button primary" id="toggle-run">▶ 开始排练</button><button class="icon-button" id="interrupt" title="立即停止当前表演" aria-label="立即停止当前表演">■</button></div>
         </section>
-        <section class="quick-card"><div class="card-heading"><strong>给她一个小动作</strong><span class="muted small">点击后进入待审队列</span></div><div class="action-buttons"><button data-action="wave"><span>👋</span>挥挥手</button><button data-action="eat"><span>🍪</span>吃一口</button><button data-action="drink"><span>☕</span>喝口水</button><button data-action="laugh"><span>☺</span>笑一笑</button><button data-action="nod"><span>✓</span>点点头</button></div></section>
+        <section class="quick-card"><div class="card-heading"><strong>给她一个小动作</strong><span class="muted small">点击后进入待审队列</span></div><div class="action-buttons"><button data-action="wave"><span class="action-icon">👋</span><span class="action-label">挥挥手<small class="action-media-status">正在检查素材</small></span></button><button data-action="eat"><span class="action-icon">🍪</span><span class="action-label">吃一口<small class="action-media-status">正在检查素材</small></span></button><button data-action="drink"><span class="action-icon">☕</span><span class="action-label">喝口水<small class="action-media-status">正在检查素材</small></span></button><button data-action="laugh"><span class="action-icon">☺</span><span class="action-label">笑一笑<small class="action-media-status">正在检查素材</small></span></button><button data-action="nod"><span class="action-icon">✓</span><span class="action-label">点点头<small class="action-media-status">正在检查素材</small></span></button></div><div class="media-readiness"><span class="readiness-mark">▧</span><div><strong id="readiness-title">正在检查本地素材</strong><p id="readiness-copy">没有对应视频时，人物照片会保持静止。</p></div><button type="button" class="text-button" data-tab="assets">准备素材 →</button></div></section>
         <section class="history-card"><div class="card-heading"><strong>刚刚发生</strong><span class="muted small">最近 12 次互动</span></div><div id="history" class="history-list"><div class="empty">排练开始后，互动记录会留在这里。</div></div></section>
       </div>
       <aside class="interaction-card"><div class="card-heading"><strong>弹幕候场区 <span class="count" id="queue-count">0</span></strong><button class="text-button danger" id="clear">清空</button></div>
@@ -39,7 +39,7 @@
   </section>
 
   <section class="tab-panel hidden" id="panel-assets">
-    <div class="section-banner"><div class="banner-symbol">▧</div><div><h2>一个角色，几种生活的小动作。</h2><p>把同一人物、同一机位的视频放进对应位置。留空时舞台保持写实静帧。</p></div><span class="pill">全部保存在本机</span></div>
+    <div class="section-banner"><div class="banner-symbol">▧</div><div><h2>让同一个人，做出不同动作。</h2><p>为待机、吃东西、喝水和说话导入同一人物的视频。没有视频时，她会保持静态照片。</p></div><span class="pill">全部保存在本机</span></div>
     <div id="asset-grid" class="asset-grid"></div>
     <section class="help-card"><h3>怎样准备写实人物素材？</h3><p>建议从固定桌面场景开始，准备待机、说话、拿起食物吃一口、喝水、挥手等片段。动作片段的开头和结尾尽量回到同一姿势，减少切换跳变。说话片段只做画面循环，本版不进行实时口型生成。</p><p>支持 H.264 MP4、WebM，每段 0.1–120 秒、最大 150 MB。视频原声会静音；语音由 Mac 单独生成。只导入你有权使用的素材。</p></section>
   </section>
