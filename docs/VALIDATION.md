@@ -1,6 +1,6 @@
 # v0.6.0 竖屏舞台与动作呈现
 
-日期：2026-10-26（Asia/Shanghai）。环境：Apple Silicon Mac、桌面 Chrome；无 GPU、无云端服务。
+日期：2026-10-25（Asia/Shanghai）。环境：Apple Silicon Mac、桌面 Chrome；无 GPU、无云端服务。
 
 ## 本轮验证
 
