@@ -59,7 +59,9 @@ mute.addEventListener('click', soundOff);
 function updateVideo(data) {
   const state = data.state;
   const slot = state.phase === 'speaking' ? state.action : state.phase === 'action' ? state.action : 'idle';
-  const media = data.media[slot] || (slot !== 'idle' ? data.media.idle : null);
+  const selectedMedia = data.media[slot];
+  const media = selectedMedia || (slot !== 'idle' ? data.media.idle : null);
+  const hasActionClip = state.phase === 'action' && Boolean(data.media[state.action]);
   const key = media ? `${media.url}:${state.job_id || ''}:${state.phase}` : '';
   if (key === visualKey) return;
   visualKey = key;
@@ -87,14 +89,16 @@ function updateVideo(data) {
     videos.forEach(v => { v.classList.remove('active'); v.pause(); });
     document.querySelector('#stage-message').textContent = '动作素材加载失败，人物静帧仍可使用';
   };
-  video.loop = state.phase !== 'action';
+  // Loop an idle fallback while the static action pose sits above it. Only a
+  // dedicated action clip should stop at its own end.
+  video.loop = state.phase !== 'action' || !hasActionClip;
   video.muted = true; video.src = media.url; video.load();
 }
 function updatePose(data) {
   const state = data.state;
   const action = state.action;
-  const hasVideo = Boolean(data.media[action] || data.media.idle);
-  const pose = state.phase === 'action' && !hasVideo ? poses[action] : null;
+  // An idle loop is not an action clip: keep the pose demo visible over it.
+  const pose = state.phase === 'action' && !data.media[action] ? poses[action] : null;
   const key = pose ? `${state.job_id || ''}:${action}:${state.start}` : '';
   if (key === poseKey) return;
   poseKey = key;
@@ -132,8 +136,13 @@ function render(data) {
   document.body.dataset.action = data.state.action;
   document.body.dataset.phase = data.state.phase;
   document.querySelector('#stage-name').textContent = data.config.name + '的片刻';
-  const hasBuiltInPose = data.state.phase === 'action' && poses[data.state.action] && !data.media[data.state.action] && !data.media.idle;
-  document.querySelector('#mode-badge').textContent = Object.keys(data.media).length ? '本地动作素材' : hasBuiltInPose ? '离线姿态演示 · 非连续视频' : '原创角色 · 离线待机';
+  const hasBuiltInPose = data.state.phase === 'action' && poses[data.state.action] && !data.media[data.state.action];
+  const selectedMedia = data.state.phase === 'action' || data.state.phase === 'speaking'
+    ? data.media[data.state.action]
+    : data.media.idle;
+  document.querySelector('#mode-badge').textContent = selectedMedia
+    ? (data.state.phase === 'action' ? '本地动作视频' : data.state.phase === 'speaking' ? '本地说话视频' : '本地待机视频')
+    : hasBuiltInPose ? '静态姿势示意 · 无连续动作' : data.media.idle ? '本地待机视频' : '原创角色 · 离线待机';
   document.querySelector('#subtitle').textContent = data.config.subtitles ? data.state.text : '';
   document.querySelector('#stage-message').textContent = data.state.phase === 'thinking' ? '看见你的弹幕了…' : '';
   const activeJob = data.state.job_id && data.history.find(job => job.id === data.state.job_id);
@@ -142,10 +151,10 @@ function render(data) {
     thinking: ['正在看弹幕', '想一想怎么回答…', '当前使用本地规则回答；后续可以替换成模型接口。'],
     action: data.media[data.state.action]
       ? ['正在播放动作', data.state.action === 'eat' ? '小满正在吃一口' : data.state.action === 'drink' ? '小满正在喝水' : data.state.action === 'wave' ? '小满正在挥手' : data.state.action === 'laugh' ? '小满笑了一下' : '小满点了点头', '动作来自你导入的本地视频素材。']
-      : data.media.idle
-        ? ['待机视频播放中', '还没有对应动作片段', '当前循环播放本地待机视频；导入这项动作的视频后可播放对应动作。']
-        : poses[data.state.action]
-          ? ['离线姿态演示', data.state.action === 'eat' ? '小满拿起饼干，吃一口' : data.state.action === 'drink' ? '小满端起杯子喝口水' : data.state.action === 'wave' ? '小满向直播间挥挥手' : data.state.action === 'laugh' ? '小满笑了一下' : '小满认真地点点头', '这是本地生成的动作姿态演示；导入视频可替换成连续动作。']
+      : poses[data.state.action]
+        ? ['静态姿势示意', data.state.action === 'eat' ? '吃一口 · 姿势预览' : data.state.action === 'drink' ? '喝水 · 姿势预览' : data.state.action === 'wave' ? '挥手 · 姿势预览' : data.state.action === 'laugh' ? '微笑 · 表情预览' : '点头 · 姿势预览', '当前没有连续动作视频，所以画面只切换到对应姿势。导入同一角色的本地动作视频后才能展示连贯运动。']
+        : data.media.idle
+          ? ['待机视频播放中', '还没有对应动作片段', '当前循环播放本地待机视频；导入这项动作的视频后可播放对应动作。']
           : ['正在准备回答', '马上回应这条弹幕', '台词由本机规则或你选用的本地模型生成。'],
     speaking: ['正在回应', `${activeJob?.user || '直播间'}，小满回答你`, '声音与字幕同步；人物只有在导入说话视频时才会动。'],
   };
