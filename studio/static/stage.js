@@ -1,5 +1,7 @@
 'use strict';
 const preview = new URLSearchParams(location.search).has('preview');
+const layout = new URLSearchParams(location.search).get('layout');
+document.body.dataset.layout = layout === 'portrait' ? 'portrait' : 'landscape';
 const speech = document.querySelector('#speech');
 const enable = document.querySelector('#enable-audio');
 const mute = document.querySelector('#mute-audio');

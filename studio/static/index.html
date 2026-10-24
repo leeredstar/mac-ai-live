@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css?v=0.5.0"><script defer src="/static/app.js?v=0.5.0"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css?v=0.6.0"><script defer src="/static/app.js?v=0.6.0"></script></head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/"><span class="brand-mark">帧</span><span>小满直播间<small>MAC AI LIVE · LOCAL STUDIO</small></span></a>
@@ -16,14 +16,14 @@
 </aside>
 <main>
   <header class="topbar"><div class="breadcrumb">创作空间 <span>/</span> <strong id="page-label">直播工作台</strong></div><div class="top-status"><span id="connection-dot" class="tiny-dot"></span><span id="connection">正在连接本机</span><span class="divider"></span><span>仅本机可访问</span></div></header>
-  <section class="page-heading"><div><div class="eyebrow">MAKE A LITTLE COMPANY.</div><h1 id="heading">让每一条弹幕，都有回应。</h1><p id="description">先在这里排练，再把你喜欢的角色带进直播间。</p></div><a class="button stage-link" href="/stage" target="_blank" rel="noopener">↗ 打开直播画面</a></section>
+  <section class="page-heading"><div><div class="eyebrow">MAKE A LITTLE COMPANY.</div><h1 id="heading">让每一条弹幕，都有回应。</h1><p id="description">先在这里排练，再把你喜欢的角色带进直播间。</p></div><a class="button stage-link" href="/stage?layout=portrait" target="_blank" rel="noopener">↗ 打开竖屏直播画面</a></section>
 
   <section class="tab-panel" id="panel-control">
     <div class="workspace-grid">
       <div class="left-column">
         <section class="preview-card">
           <div class="card-heading"><div><span class="live-dot"></span> 画面预览 <span class="muted small">PREVIEW</span></div><span class="pill" id="preview-state">待机中</span></div>
-          <div class="preview-wrap"><iframe src="/stage?preview=1&v=0.5.0" title="数字人直播预览" id="preview"></iframe><span class="preview-tag">眨眼待机 · 回答时轻微嘴部开合</span></div>
+          <div class="preview-wrap"><iframe src="/stage?preview=1&v=0.6.0" title="数字人直播预览" id="preview"></iframe><span class="preview-tag">眨眼待机 · 回答时轻微嘴部开合</span></div>
           <div class="transport"><div class="transport-info"><span id="run-dot" class="run-dot"></span><div><strong id="run-label">还没开始排练</strong><small id="run-description">预览静音 · 声音从独立直播窗口播放</small></div></div><button class="button primary" id="toggle-run">▶ 开始排练</button><button class="icon-button" id="interrupt" title="立即停止当前表演" aria-label="立即停止当前表演">■</button></div>
         </section>
         <section class="quick-card"><div class="card-heading"><strong>动作排练</strong><span class="muted small">每个按钮显示匹配姿势；挥手为双帧交替。连贯动作需本地视频。</span></div><div class="action-buttons"><button data-action="wave"><span class="action-icon">👋</span><span class="action-label">挥挥手<small class="action-media-status">正在检查素材</small></span></button><button data-action="eat"><span class="action-icon">🍪</span><span class="action-label">吃一口<small class="action-media-status">正在检查素材</small></span></button><button data-action="drink"><span class="action-icon">☕</span><span class="action-label">喝口水<small class="action-media-status">正在检查素材</small></span></button><button data-action="laugh"><span class="action-icon">☺</span><span class="action-label">笑一笑<small class="action-media-status">正在检查素材</small></span></button><button data-action="nod"><span class="action-icon">✓</span><span class="action-label">点点头<small class="action-media-status">正在检查素材</small></span></button></div><div class="media-readiness"><span class="readiness-mark">▧</span><div><strong id="readiness-title">正在检查本地素材</strong><p id="readiness-copy">待机时会自然眨眼；回答时嘴部轻微开合。吃喝等姿势和挥手双帧仍是预制画面，不是连续真人动作或逐字口型。</p></div><button type="button" class="text-button" data-tab="assets">准备素材 →</button></div></section>
@@ -68,11 +68,11 @@
   </section>
 
   <section class="tab-panel hidden" id="panel-companion">
-    <div class="companion-banner"><div><div class="eyebrow">DOUYIN LIVE COMPANION · MAC</div><h2>把本地舞台送进直播伴侣</h2><p>本项目负责角色画面、弹幕排练和中文声音；直播伴侣负责采集窗口并推流。</p></div><a class="button primary" href="/stage" target="_blank" rel="noopener">打开独立直播画面 ↗</a></div>
+    <div class="companion-banner"><div><div class="eyebrow">DOUYIN LIVE COMPANION · MAC</div><h2>把本地舞台送进直播伴侣</h2><p>本项目负责角色画面、弹幕排练和中文声音；直播伴侣负责采集窗口并推流。</p></div><a class="button primary" href="/stage?layout=portrait" target="_blank" rel="noopener">打开竖屏直播画面 ↗</a></div>
     <div class="companion-note"><span>●</span><div><strong>Mac 普通视频直播 · 程序窗口采集</strong><p>不需要独立显卡，也不需要进入 PICO/VR 虚拟直播。电脑开播资格由抖音账号决定。</p></div></div>
     <div class="companion-steps">
       <article class="companion-step"><span class="step-number">01</span><div><h3>先准备一段本地排练</h3><p>在工作台导入你有权使用的角色动作视频，提交示例弹幕并人工放行。确认舞台画面、字幕和语音都符合预期。</p><button type="button" class="text-button" data-tab="assets">去准备角色动作 →</button></div></article>
-      <article class="companion-step"><span class="step-number">02</span><div><h3>单独打开直播画面</h3><p>点击上方按钮，在 Chrome 里单独打开“小满 · 直播画面”。把这个窗口调整成竖屏构图，全屏显示舞台，避免采集到地址栏或工作台。</p></div></article>
+      <article class="companion-step"><span class="step-number">02</span><div><h3>单独打开竖屏直播画面</h3><p>点击上方按钮，会打开 9:16 竖屏舞台。尽量把 Chrome 窗口调整为窄而高；若窗口仍是横屏，舞台会居中显示，进入直播伴侣后将窗口素材裁切到中央竖屏画布。</p></div></article>
       <article class="companion-step"><span class="step-number">03</span><div><h3>在伴侣里添加程序窗口</h3><p>登录抖音直播伴侣，进入常规视频直播预览，选择“添加素材 → 程序窗口/窗口捕获”，选刚才打开的 Chrome 舞台窗口。再检查竖屏画布、铺满方式和字幕边缘。</p></div></article>
       <article class="companion-step"><span class="step-number">04</span><div><h3>先验声音，再决定开播</h3><p>在舞台窗口点一次“启用声音”。观察直播伴侣的声音电平是否随回答变化，并确认没有重复回声。Mac 版本的实际音频选项以你安装的界面为准；预览收不到声音时先别开播。</p></div></article>
       <article class="companion-step"><span class="step-number">05</span><div><h3>检查账号资格与直播标识</h3><p>先在抖音官方预览里确认账号可电脑开播、画面和声音正常。角色是 AI 虚拟形象，保持舞台上的 AI 标识；公开开播由账号所有者在直播伴侣内自行确认。</p></div></article>

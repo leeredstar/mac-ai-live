@@ -32,7 +32,7 @@ document.querySelectorAll('[data-action]').forEach(button=>button.addEventListen
     if(!latest.running)await api('/api/control',{command:'start'});
     const job=await api('/api/comments',{user:'场控',text:labels[action]+'，和大家互动一下',action});
     if(job.status==='pending')await api('/api/control',{command:'approve',id:job.id});
-    toast(latest?.media?.[action]?'动作视频已开始播放。':`已切换到“${labels[action]}”静态姿势；还没有连续动作视频。`);
+    toast(latest?.media?.[action]?'动作视频已开始播放。':`已展示“${labels[action]}”姿势和轻微画面律动；还没有连续动作视频。`);
   }catch(error){toast(error.message||'动作没有启动，请检查工作台状态',true);}
   button.disabled=false;
 }));

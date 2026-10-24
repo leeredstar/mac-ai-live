@@ -30,3 +30,41 @@ body[data-video-active="true"] .face-motion{display:none}
 @keyframes idle-light{0%,100%{filter:brightness(1)}50%{filter:brightness(1.025)}}
 @media(max-aspect-ratio:4/5){.pose-frame{object-position:65% center}.scene-card{top:17%;left:5%;width:40%;padding:2cqw;border-radius:2.4cqw}.scene-card p,.scene-card-meta{display:none}.scene-card-label{margin-bottom:.8cqw;font-size:clamp(8px,1.8cqw,11px)}.scene-card strong{font-size:clamp(12px,2.7cqw,16px);line-height:1.35}}
 @media(max-aspect-ratio:4/5){.face-motion .face-layer{object-position:65% center}.face-motion .blink-layer{mask-image:radial-gradient(ellipse 9.4% 2.2% at 67% 37.7%,#000 55%,transparent 100%),radial-gradient(ellipse 9.4% 2.2% at 95.5% 39.8%,#000 55%,transparent 100%)}.face-motion .mouth-layer{mask-image:radial-gradient(ellipse 11.3% 2.3% at 82.5% 55.3%,#000 55%,transparent 100%)}}
+
+/* A dedicated Douyin portrait canvas also works inside a landscape Mac desktop. */
+body[data-layout="portrait"] .scene{width:min(100vw,56.25vh);height:min(100vh,177.7778vw);aspect-ratio:9/16;border-radius:0;box-shadow:none}
+body[data-layout="portrait"] .avatar-photo,body[data-layout="portrait"] .face-motion .face-layer,body[data-layout="portrait"] .pose-frame{object-position:79% center}
+body[data-layout="portrait"] .wave-frame{object-position:85% center}
+body[data-layout="portrait"] .scene::after{background:linear-gradient(0deg,#101812a8 0%,#10181235 35%,transparent 66%),linear-gradient(180deg,#1018126b 0%,transparent 28%)}
+body[data-layout="portrait"] .stage-brand{left:5%;top:4%;font-size:clamp(18px,4.1cqw,25px)}
+body[data-layout="portrait"] .stage-brand small{font-size:clamp(9px,2.2cqw,13px)}
+body[data-layout="portrait"] .stage-badges{top:4%;right:4%;gap:1.2cqw}
+body[data-layout="portrait"] .stage-badges span{font-size:clamp(8px,2cqw,12px);padding:1cqw 2cqw}
+body[data-layout="portrait"] .scene-card{top:17%;left:5%;width:40%;padding:2cqw;border-radius:2.4cqw}
+body[data-layout="portrait"] .scene-card p,body[data-layout="portrait"] .scene-card-meta{display:none}
+body[data-layout="portrait"] .scene-card-label{margin-bottom:.8cqw;font-size:clamp(8px,1.8cqw,11px)}
+body[data-layout="portrait"] .scene-card strong{font-size:clamp(12px,2.7cqw,16px);line-height:1.35}
+body[data-layout="portrait"] .viewer-message{left:5%;bottom:21%;width:46%;padding:2.3cqw;border-radius:2.6cqw;gap:2cqw}
+body[data-layout="portrait"] .viewer-message-mark{font-size:2.5cqw}
+body[data-layout="portrait"] .viewer-message-body{gap:.8cqw}
+body[data-layout="portrait"] .viewer-message-body small{font-size:clamp(8px,1.8cqw,10px)}
+body[data-layout="portrait"] .viewer-message-body strong{font-size:clamp(10px,2.2cqw,13px)}
+body[data-layout="portrait"] .stage-message{left:5%;top:60%;max-width:46%;font-size:clamp(10px,2.2cqw,13px)}
+body[data-layout="portrait"] .subtitle{left:5%;right:5%;bottom:5%;font-size:clamp(15px,4cqw,20px);padding:2cqw 3cqw;border-radius:2.6cqw}
+body[data-layout="portrait"] .stage-footer{left:5%;right:5%;bottom:1.5%;font-size:clamp(8px,1.6cqw,10px)}
+body[data-layout="portrait"] .enable-audio{bottom:12%;font-size:12px;padding:11px 18px}
+body[data-layout="portrait"] .mute-audio{bottom:2%;right:4%}
+body[data-layout="portrait"] .face-motion .blink-layer{mask-image:radial-gradient(ellipse 9.4% 2.2% at 30% 37.7%,#000 55%,transparent 100%),radial-gradient(ellipse 9.4% 2.2% at 59% 39.8%,#000 55%,transparent 100%)}
+body[data-layout="portrait"] .face-motion .mouth-layer{mask-image:radial-gradient(ellipse 11.3% 2.3% at 52% 55.3%,#000 55%,transparent 100%)}
+
+/* Small camera breathing keeps a pose from feeling like a hard, frozen cut. */
+.pose-frame.active{transform-origin:70% 52%;will-change:transform}
+.pose-stack.active[data-action="eat"] .pose-frame.active{animation:eat-camera 1.15s ease-in-out infinite}
+.pose-stack.active[data-action="drink"] .pose-frame.active{animation:drink-camera 1.75s ease-in-out infinite}
+.pose-stack.active[data-action="laugh"] .pose-frame.active{animation:laugh-camera .72s ease-in-out infinite}
+.pose-stack.active[data-action="nod"] .pose-frame.active{animation:nod-camera .85s ease-in-out infinite}
+@keyframes eat-camera{0%,100%{transform:scale(1.018) translateY(0)}38%{transform:scale(1.034) translateY(-.32%)}70%{transform:scale(1.025) translateY(.12%)}}
+@keyframes drink-camera{0%,100%{transform:scale(1.02) rotate(-.12deg)}50%{transform:scale(1.034) rotate(.12deg)}}
+@keyframes laugh-camera{0%,100%{transform:scale(1.02) translateY(0)}50%{transform:scale(1.032) translateY(-.38%) rotate(.08deg)}}
+@keyframes nod-camera{0%,100%{transform:scale(1.02) translateY(0)}48%{transform:scale(1.032) translateY(.72%)}70%{transform:scale(1.027) translateY(.18%)}}
+@media(prefers-reduced-motion:reduce){.avatar-photo,.face-motion .face-layer,.pose-stack.active,.pose-frame.active{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
