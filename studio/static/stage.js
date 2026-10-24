@@ -80,7 +80,7 @@ function updateVideo(data) {
   video.onerror = () => {
     if (generation !== videoGeneration) return;
     videos.forEach(v => { v.classList.remove('active'); v.pause(); });
-    document.querySelector('#stage-message').textContent = '素材加载失败，正在显示动画示例';
+    document.querySelector('#stage-message').textContent = '动作素材加载失败，人物静帧仍可使用';
   };
   video.loop = state.phase !== 'action';
   video.muted = true; video.src = media.url; video.load();
@@ -91,9 +91,22 @@ function render(data) {
   document.body.dataset.action = data.state.action;
   document.body.dataset.phase = data.state.phase;
   document.querySelector('#stage-name').textContent = data.config.name + '的片刻';
-  document.querySelector('#mode-badge').textContent = Object.keys(data.media).length ? '本地素材驱动' : '本地动画演示';
+  document.querySelector('#mode-badge').textContent = Object.keys(data.media).length ? '本地动作素材' : '原创写实角色 · 静帧演示';
   document.querySelector('#subtitle').textContent = data.config.subtitles ? data.state.text : '';
   document.querySelector('#stage-message').textContent = data.state.phase === 'thinking' ? '看见你的弹幕了…' : '';
+  const activeJob = data.state.job_id && data.history.find(job => job.id === data.state.job_id);
+  const labels = {
+    idle: ['今晚聊什么', '下班后，陪你坐一会儿。', '发一条弹幕；放行后会播放语音和可用的动作素材。'],
+    thinking: ['正在看弹幕', '想一想怎么回答…', '当前使用本地规则回答；后续可以替换成模型接口。'],
+    action: ['正在表演', data.state.action === 'eat' ? '小满正在吃一口' : data.state.action === 'drink' ? '小满正在喝水' : '小满正在回应动作', '动作来自已导入的视频素材；没有对应素材时人物照片保持静止。'],
+    speaking: ['正在回应', `${activeJob?.user || '直播间'}，小满回答你`, '声音与字幕同步；人物只有在导入说话视频时才会动。'],
+  };
+  const [cardLabel, cardTitle, cardDescription] = labels[data.state.phase] || labels.idle;
+  document.querySelector('#scene-card-label').textContent = cardLabel;
+  document.querySelector('#scene-card-title').textContent = cardTitle;
+  document.querySelector('#scene-card-description').textContent = cardDescription;
+  document.querySelector('#viewer-name').textContent = activeJob ? `观众 · ${activeJob.user}` : '直播间';
+  document.querySelector('#viewer-text').textContent = activeJob ? activeJob.text : '今夜有风，进来坐坐。';
   speech.volume = data.config.volume;
   updateVideo(data); playSpeech(data);
   document.querySelector('#stage-connection').textContent = 'LOCAL · OFFLINE';
