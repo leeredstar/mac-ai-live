@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css"><script defer src="/static/app.js"></script></head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="/"><span class="brand-mark">帧</span><span>小满直播间<small>MAC AI LIVE · LOCAL STUDIO</small></span></a>
+  <div class="nav-caption">创作空间</div>
+  <nav aria-label="主导航">
+    <button class="nav-item selected" data-tab="control"><span>◉</span> 直播工作台</button>
+    <button class="nav-item" data-tab="assets"><span>▧</span> 角色与动作 <i id="asset-count">0</i></button>
+    <button class="nav-item" data-tab="settings"><span>☷</span> 声音与回答</button>
+  </nav>
+  <div class="sidebar-note"><span class="tiny-dot"></span> 算力，留在你的 Mac<p>不需要独立显卡。<br>素材和声音都在本地运行。</p><div class="chip">OFFLINE FIRST</div></div>
+  <div class="sidebar-bottom"><span class="avatar-mini">满</span><div>我的本地空间<small>v0.1.0 · 素材驱动版</small></div><span class="tiny-dot"></span></div>
+</aside>
+<main>
+  <header class="topbar"><div class="breadcrumb">创作空间 <span>/</span> <strong id="page-label">直播工作台</strong></div><div class="top-status"><span id="connection-dot" class="tiny-dot"></span><span id="connection">正在连接本机</span><span class="divider"></span><span>仅本机可访问</span></div></header>
+  <section class="page-heading"><div><div class="eyebrow">MAKE A LITTLE COMPANY.</div><h1 id="heading">让每一条弹幕，都有回应。</h1><p id="description">先在这里排练，再把你喜欢的角色带进直播间。</p></div><a class="button stage-link" href="/stage" target="_blank" rel="noopener">↗ 打开直播画面</a></section>
+
+  <section class="tab-panel" id="panel-control">
+    <div class="workspace-grid">
+      <div class="left-column">
+        <section class="preview-card">
+          <div class="card-heading"><div><span class="live-dot"></span> 画面预览 <span class="muted small">PREVIEW</span></div><span class="pill" id="preview-state">待机中</span></div>
+          <div class="preview-wrap"><iframe src="/stage?preview=1" title="数字人直播预览" id="preview"></iframe><span class="preview-tag">原创示例角色 · 可替换为你的视频</span></div>
+          <div class="transport"><div class="transport-info"><span id="run-dot" class="run-dot"></span><div><strong id="run-label">还没开始排练</strong><small id="run-description">预览静音 · 声音从独立直播窗口播放</small></div></div><button class="button primary" id="toggle-run">▶ 开始排练</button><button class="icon-button" id="interrupt" title="立即停止当前表演" aria-label="立即停止当前表演">■</button></div>
+        </section>
+        <section class="quick-card"><div class="card-heading"><strong>给她一个小动作</strong><span class="muted small">点击后进入待审队列</span></div><div class="action-buttons"><button data-action="wave"><span>👋</span>挥挥手</button><button data-action="eat"><span>🍪</span>吃一口</button><button data-action="drink"><span>☕</span>喝口水</button><button data-action="laugh"><span>☺</span>笑一笑</button><button data-action="nod"><span>✓</span>点点头</button></div></section>
+        <section class="history-card"><div class="card-heading"><strong>刚刚发生</strong><span class="muted small">最近 12 次互动</span></div><div id="history" class="history-list"><div class="empty">排练开始后，互动记录会留在这里。</div></div></section>
+      </div>
+      <aside class="interaction-card"><div class="card-heading"><strong>弹幕候场区 <span class="count" id="queue-count">0</span></strong><button class="text-button danger" id="clear">清空</button></div>
+        <div class="source-notice"><span>◌</span><div><strong>本地排练入口</strong><p>手动输入或接收本机程序推送。<br>尚未连接抖音真实弹幕。</p></div></div>
+        <form id="comment-form"><label for="viewer">观众昵称</label><input id="viewer" maxlength="24" value="路过的小伙伴" autocomplete="off"><label for="comment">说点什么</label><textarea id="comment" placeholder="例如：小满，吃一口饼干吧！" maxlength="300" rows="3" required></textarea><div class="form-bottom"><span>先审核，再表演</span><button type="submit" class="button primary">加入队列 ↗</button></div></form>
+        <div class="queue-title"><span>等候中的互动</span><span id="pending-hint">手动放行</span></div><div id="queue" class="queue-list"><div class="empty queue-empty"><span>✳</span><strong>舞台已经准备好</strong><p>试着发送一条弹幕，<br>看看她会怎么回应。</p><button class="text-button" id="sample">填入一条示例 →</button></div></div>
+        <div class="queue-footer"><span class="tiny-dot"></span> 一次只表演一条，动作与说话有序衔接</div>
+      </aside>
+    </div>
+    <div class="bottom-note">✧ 吃东西时先完成动作，再开口回答。写实效果取决于你上传的角色素材；示例角色使用程序动画。</div>
+  </section>
+
+  <section class="tab-panel hidden" id="panel-assets">
+    <div class="section-banner"><div class="banner-symbol">▧</div><div><h2>一个角色，几种生活的小动作。</h2><p>把同一人物、同一机位的视频放进对应位置。留空时显示原创动画示例。</p></div><span class="pill">全部保存在本机</span></div>
+    <div id="asset-grid" class="asset-grid"></div>
+    <section class="help-card"><h3>怎样准备写实人物素材？</h3><p>建议从固定桌面场景开始，准备待机、说话、拿起食物吃一口、喝水、挥手等片段。动作片段的开头和结尾尽量回到同一姿势，减少切换跳变。说话片段只做画面循环，本版不进行实时口型生成。</p><p>支持 H.264 MP4、WebM，每段 0.1–120 秒、最大 150 MB。视频原声会静音；语音由 Mac 单独生成。只导入你有权使用的素材。</p></section>
+  </section>
+
+  <section class="tab-panel hidden" id="panel-settings">
+    <form id="settings-form" class="settings-grid">
+      <section class="settings-card"><div class="section-number">01 / CHARACTER</div><h2>她的名字与声音</h2><label for="setting-name">角色名字</label><input id="setting-name" name="name" maxlength="24" required><label for="setting-voice">Mac 本地中文声音</label><select id="setting-voice" name="voice"><option value="Tingting">婷婷 · 普通话</option><option value="Meijia">美佳 · 台湾普通话</option></select><label for="setting-rate">语速 <span id="rate-label"></span></label><input id="setting-rate" name="rate" type="range" min="100" max="280" step="5"><label for="setting-volume">输出音量 <span id="volume-label"></span></label><input id="setting-volume" name="volume" type="range" min="0" max="1" step="0.05"><label class="switch-row"><span>直播画面显示字幕</span><input name="subtitles" type="checkbox" id="setting-subtitles"></label><p class="field-help">声音使用系统已安装的音色，运行时无需联网。独立直播窗口需点一次“启用声音”。</p></section>
+      <section class="settings-card"><div class="section-number">02 / RESPONSE</div><h2>先把互动跑顺</h2><label for="setting-engine">回答方式</label><select id="setting-engine" name="engine"><option value="rules">规则演示 · 开箱即用</option><option value="ollama">本地 Ollama · 可选</option></select><div class="field-help engine-note">当前版本优先演示动作与语音。规则模式不具备通用问答能力；后续可替换为模型 API。</div><div id="ollama-fields"><label for="setting-model">已安装的 Ollama 模型名称</label><input id="setting-model" name="model" placeholder="qwen2.5:1.5b"><label for="setting-persona">本地模型人设</label><textarea id="setting-persona" name="persona" rows="3" maxlength="1200"></textarea><p class="field-help">只连接本机 11434 端口，明确使用 CPU；不会自动安装模型或连接云端。</p></div><label class="switch-row"><span>新弹幕自动放行</span><input name="auto_approve" type="checkbox" id="setting-auto_approve"></label><p class="field-help">默认关闭。关闭时，点击“放行”后才会表演。</p></section>
+      <div class="save-bar"><span>设置与素材仅存放在本机 data 目录，不会上传 GitHub。</span><button type="submit" class="button primary">保存设置 ✓</button></div>
+    </form>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body></html>
