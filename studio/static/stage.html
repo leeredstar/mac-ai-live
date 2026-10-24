@@ -1,10 +1,11 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 直播画面</title><link rel="stylesheet" href="/static/stage.css?v=0.4.1"><script defer src="/static/stage.js?v=0.4.1"></script></head>
-<body data-action="idle"><div class="scene" id="scene">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 直播画面</title><link rel="stylesheet" href="/static/stage.css?v=0.5.0"><script defer src="/static/stage.js?v=0.5.0"></script></head>
+<body data-action="idle" data-video-active="false"><div class="scene" id="scene">
 <img class="avatar-photo" src="/static/character-xiaoman-v3.jpg" alt="AI 虚拟主播小满：原创写实角色，夜间居家直播场景" fetchpriority="high">
+<div class="face-motion" id="face-motion" aria-hidden="true"><img class="face-layer blink-layer" src="/static/character-actions/xiaoman-v3-blink.jpg" alt=""><img class="face-layer mouth-layer" src="/static/character-actions/xiaoman-v3-talk.jpg" alt=""></div>
 <video id="video-a" class="character-video" muted playsinline preload="auto" aria-hidden="true"></video><video id="video-b" class="character-video" muted playsinline preload="auto" aria-hidden="true"></video>
 <div class="pose-stack" id="pose-stack" aria-hidden="true"><img id="pose-frame" class="pose-frame" alt=""><img id="pose-wave-a" class="pose-frame wave-frame" alt=""><img id="pose-wave-b" class="pose-frame wave-frame" alt=""></div>
 <div class="stage-brand"><span class="stage-leaf">✳</span><span id="stage-name">小满</span><small id="stage-byline">下班后，陪你坐一会儿。</small></div>
-<div class="stage-badges"><span id="live-indicator"><i></i> 本地演示</span><span id="mode-badge">原创角色 · 低头看弹幕</span><span>AI 生成虚拟形象</span></div>
+<div class="stage-badges"><span id="live-indicator"><i></i> 本地演示</span><span id="mode-badge">原创角色 · 眨眼待机</span><span>AI 生成虚拟形象</span></div>
 <div class="scene-card" id="scene-card"><span class="scene-card-label" id="scene-card-label">今晚聊什么</span><strong id="scene-card-title">下班后，陪你坐一会儿。</strong><p id="scene-card-description">发弹幕后，小满会看消息，再用本机声音回应。</p><div class="scene-card-meta"><span>● 预制动作画面</span><span>中文语音 · 本地合成</span></div></div>
 <div class="viewer-message" id="viewer-message"><span class="viewer-message-mark">✳</span><span class="viewer-message-body"><small id="viewer-name">直播间</small><strong id="viewer-text">今夜有风，进来坐坐。</strong></span></div>
 <div class="stage-message" id="stage-message"></div>

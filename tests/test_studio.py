@@ -166,7 +166,7 @@ class HTTPTests(unittest.TestCase):
         for action_image in ("xiaoman-v3-eat.jpg", "xiaoman-v3-drink.jpg",
                              "xiaoman-v3-wave-a.jpg", "xiaoman-v3-wave-b.jpg",
                              "xiaoman-v3-laugh.jpg", "xiaoman-v3-nod.jpg",
-                             "xiaoman-v3-talk.jpg"):
+                             "xiaoman-v3-talk.jpg", "xiaoman-v3-blink.jpg"):
             code, body, headers = self.request("/static/character-actions/" + action_image)
             self.assertEqual(code, 200, action_image)
             self.assertTrue(body, action_image)
@@ -174,11 +174,12 @@ class HTTPTests(unittest.TestCase):
         code, body, _ = self.request("/stage")
         self.assertEqual(code, 200)
         self.assertIn(b'/static/character-xiaoman-v3.jpg', body)
-        self.assertIn(b'v=0.4.1', body)
+        self.assertIn(b'v=0.5.0', body)
         self.assertIn(b'id="pose-stack"', body)
+        self.assertIn(b'id="face-motion"', body)
         code, body, _ = self.request("/")
         self.assertEqual(code, 200)
-        self.assertIn(b'/stage?preview=1&v=0.4.1', body)
+        self.assertIn(b'/stage?preview=1&v=0.5.0', body)
 
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg not installed")
     def test_import_validate_and_unbind_media(self):

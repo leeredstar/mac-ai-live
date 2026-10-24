@@ -6,10 +6,31 @@ const mute = document.querySelector('#mute-audio');
 const videos = [document.querySelector('#video-a'), document.querySelector('#video-b')];
 const poseStack = document.querySelector('#pose-stack');
 const poseFrame = document.querySelector('#pose-frame');
+const faceMotion = document.querySelector('#face-motion');
 const waveFrames = [document.querySelector('#pose-wave-a'), document.querySelector('#pose-wave-b')];
 const poses = {talk:'/static/character-actions/xiaoman-v3-talk.jpg',eat:'/static/character-actions/xiaoman-v3-eat.jpg',drink:'/static/character-actions/xiaoman-v3-drink.jpg',wave:['/static/character-actions/xiaoman-v3-wave-a.jpg','/static/character-actions/xiaoman-v3-wave-b.jpg'],wavePortrait:['/static/character-actions/xiaoman-v3-wave-a.jpg','/static/character-actions/xiaoman-v3-wave-b.jpg'],laugh:'/static/character-actions/xiaoman-v3-laugh.jpg',nod:'/static/character-actions/xiaoman-v3-nod.jpg'};
-let sound = false, latest = null, activeVideo = 0, visualKey = '', poseKey = '', waveTimer = null, waveIndex = 0, soundKey = '', videoGeneration = 0;
+let sound = false, latest = null, activeVideo = 0, visualKey = '', poseKey = '', waveTimer = null, waveIndex = 0, soundKey = '', videoGeneration = 0, blinkTimer = null, blinkResetTimer = null, blinkMode = '';
 Object.values(poses).flat().forEach(url => { const preload = new Image(); preload.src = url; });
+function clearBlinkTimers() { clearTimeout(blinkTimer); clearTimeout(blinkResetTimer); blinkTimer = null; blinkResetTimer = null; faceMotion.classList.remove('blinking'); }
+function scheduleBlink() {
+  if (blinkMode !== 'idle') return;
+  blinkTimer = setTimeout(() => {
+    if (blinkMode !== 'idle') return;
+    faceMotion.classList.add('blinking');
+    blinkResetTimer = setTimeout(() => { faceMotion.classList.remove('blinking'); scheduleBlink(); }, 145);
+  }, 2600 + Math.random() * 3200);
+}
+function updateFaceMotion(data) {
+  const state = data.state;
+  const slot = state.phase === 'speaking' || state.phase === 'action' ? state.action : 'idle';
+  const hasVideo = Boolean(data.media[slot] || (slot !== 'idle' && data.media.idle));
+  document.body.dataset.videoActive = hasVideo ? 'true' : 'false';
+  const nextBlinkMode = !hasVideo && (state.phase === 'idle' || state.phase === 'thinking') ? 'idle' : 'none';
+  if (nextBlinkMode !== blinkMode) {
+    clearBlinkTimers(); blinkMode = nextBlinkMode;
+    if (blinkMode === 'idle') scheduleBlink();
+  }
+}
 let releaseSoundLock = null;
 if (preview) enable.classList.add('hidden');
 function playSpeech(data) {
@@ -100,7 +121,9 @@ function updatePose(data) {
   const poseAction = state.phase === 'speaking' ? 'talk' : action;
   const canShowPose = state.phase === 'action' || state.phase === 'speaking';
   // An idle loop is not an action/talk clip: keep the matching pose above it.
-  const pose = canShowPose && !data.media[poseAction] ? poses[poseAction] : null;
+  const hasIdleSpeechFallback = state.phase === 'speaking' && !data.media.talk && Boolean(data.media.idle);
+  const pose = canShowPose && !data.media[poseAction]
+    && (poseAction !== 'talk' || hasIdleSpeechFallback) ? poses[poseAction] : null;
   const key = pose ? `${state.job_id || ''}:${poseAction}:${state.start}` : '';
   if (key === poseKey) return;
   poseKey = key;
@@ -150,7 +173,8 @@ function render(data) {
     : data.media.idle;
   document.querySelector('#mode-badge').textContent = selectedMedia
     ? (data.state.phase === 'action' ? '本地动作视频' : data.state.phase === 'speaking' ? '本地说话视频' : '本地待机视频')
-    : hasBuiltInPose ? (data.state.phase === 'speaking' ? '说话表情 · 无口型同步' : '预制姿势 · 非连续动作') : data.media.idle ? '本地待机视频' : '原创角色 · 预制待机图';
+    : data.state.phase === 'speaking' && !data.media.talk && !data.media.idle ? '轻量口型动画 · 非音素同步'
+      : hasBuiltInPose ? (data.state.phase === 'speaking' ? '说话姿势 · 无实时口型' : '预制姿势 · 非连续动作') : data.media.idle ? '本地待机视频' : '原创角色 · 预制待机图';
   document.querySelector('#subtitle').textContent = data.config.subtitles ? data.state.text : '';
   document.querySelector('#stage-message').textContent = data.state.phase === 'thinking' ? '看见你的弹幕了…' : '';
   const activeJob = data.state.job_id && data.history.find(job => job.id === data.state.job_id);
@@ -164,7 +188,7 @@ function render(data) {
         : data.media.idle
           ? ['待机视频播放中', '还没有对应动作片段', '当前循环播放本地待机视频；导入这项动作的视频后可播放对应动作。']
           : ['正在准备回答', '马上回应这条弹幕', '台词由本机规则或你选用的本地模型生成。'],
-    speaking: ['正在回应', `${activeJob?.user || '直播间'}，小满回答你`, data.media.talk ? '正在播放本地说话视频。' : '当前显示单帧说话表情，声音与字幕同步，没有口型动画。'],
+    speaking: ['正在回应', `${activeJob?.user || '直播间'}，小满回答你`, data.media.talk ? '正在播放本地说话视频。' : data.media.idle ? '待机视频上显示单帧说话姿势；声音和字幕同步，口型由素材决定。' : '嘴部会随语音轻微开合；这是预制表情节奏，不按音素同步。'],
   };
   const [cardLabel, cardTitle, cardDescription] = labels[data.state.phase] || labels.idle;
   document.querySelector('#scene-card-label').textContent = cardLabel;
@@ -173,7 +197,7 @@ function render(data) {
   document.querySelector('#viewer-name').textContent = activeJob ? `观众 · ${activeJob.user}` : '直播间';
   document.querySelector('#viewer-text').textContent = activeJob ? activeJob.text : '今夜有风，进来坐坐。';
   speech.volume = data.config.volume;
-  updateVideo(data); updatePose(data); playSpeech(data);
+  updateFaceMotion(data); updateVideo(data); updatePose(data); playSpeech(data);
   document.querySelector('#stage-connection').textContent = 'LOCAL · OFFLINE';
 }
 const stream = new EventSource('/api/events');
@@ -183,9 +207,10 @@ stream.onerror = () => {
   videos.forEach(v => v.pause()); visualKey = ''; ++videoGeneration;
   if (waveTimer) clearInterval(waveTimer);
   waveTimer = null; poseKey = ''; poseStack.classList.remove('active');
+  clearBlinkTimers(); blinkMode = '';
   document.body.dataset.action = 'idle'; document.body.dataset.phase = 'idle';
   document.querySelector('#subtitle').textContent = '';
   document.querySelector('#stage-message').textContent = '工作台连接中断，等待恢复';
   document.querySelector('#stage-connection').textContent = 'RECONNECTING';
 };
-addEventListener('pagehide', () => { soundOff(); stream.close(); });
+addEventListener('pagehide', () => { soundOff(); stream.close(); clearBlinkTimers(); });

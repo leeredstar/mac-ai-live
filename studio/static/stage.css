@@ -9,15 +9,24 @@ body{display:grid;place-items:center;background:#101612}.scene{position:relative
 /* Local pose sequences provide immediate action feedback without a GPU or external service. */
 .character-video{z-index:1}
 .scene::after{z-index:1}
-.pose-stack{position:absolute;inset:0;z-index:2;opacity:0;pointer-events:none;overflow:hidden}
+.face-motion{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.face-motion .face-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;opacity:0;pointer-events:none;mask-repeat:no-repeat;mask-size:100% 100%;animation:photo-drift 36s ease-in-out infinite alternate,idle-light 7s ease-in-out infinite}
+.face-motion .blink-layer{mask-image:radial-gradient(ellipse 4.3% 2.2% at 67.5% 37.7%,#000 55%,transparent 100%),radial-gradient(ellipse 4.3% 2.2% at 77.5% 39.8%,#000 55%,transparent 100%);transition:opacity .045s linear}
+.face-motion .mouth-layer{mask-image:radial-gradient(ellipse 5.1% 2.3% at 71.5% 55.3%,#000 55%,transparent 100%)}
+.face-motion.blinking .blink-layer{opacity:1}
+body[data-phase="speaking"][data-video-active="false"] .face-motion .mouth-layer{animation:photo-drift 36s ease-in-out infinite alternate,idle-light 7s ease-in-out infinite,mouth-beat .34s ease-in-out infinite}
+body[data-video-active="true"] .face-motion{display:none}
+.pose-stack{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;overflow:hidden}
 .pose-stack.active{animation:pose-window var(--action-duration,2.4s) ease-in-out both}
 .pose-stack.speaking.active{animation:none;opacity:1}
 .pose-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;opacity:0;transition:opacity .24s ease}
 .pose-frame.active{opacity:1}
 .wave-frame.active{opacity:1}
 .wave-frame{transition:opacity .08s linear}
-.stage-brand,.stage-badges,.scene-card,.viewer-message,.stage-message,.subtitle,.stage-footer,.enable-audio,.mute-audio{z-index:3}
+.stage-brand,.stage-badges,.scene-card,.viewer-message,.stage-message,.subtitle,.stage-footer,.enable-audio,.mute-audio{z-index:4}
 @keyframes pose-window{0%,100%{opacity:0}12%,74%{opacity:1}88%{opacity:0}}
+@keyframes mouth-beat{0%,100%{opacity:.14}46%{opacity:.92}}
 .avatar-photo{animation:photo-drift 36s ease-in-out infinite alternate,idle-light 7s ease-in-out infinite}
 @keyframes idle-light{0%,100%{filter:brightness(1)}50%{filter:brightness(1.025)}}
 @media(max-aspect-ratio:4/5){.pose-frame{object-position:65% center}.scene-card{top:17%;left:5%;width:40%;padding:2cqw;border-radius:2.4cqw}.scene-card p,.scene-card-meta{display:none}.scene-card-label{margin-bottom:.8cqw;font-size:clamp(8px,1.8cqw,11px)}.scene-card strong{font-size:clamp(12px,2.7cqw,16px);line-height:1.35}}
+@media(max-aspect-ratio:4/5){.face-motion .face-layer{object-position:65% center}.face-motion .blink-layer{mask-image:radial-gradient(ellipse 9.4% 2.2% at 67% 37.7%,#000 55%,transparent 100%),radial-gradient(ellipse 9.4% 2.2% at 95.5% 39.8%,#000 55%,transparent 100%)}.face-motion .mouth-layer{mask-image:radial-gradient(ellipse 11.3% 2.3% at 82.5% 55.3%,#000 55%,transparent 100%)}}
