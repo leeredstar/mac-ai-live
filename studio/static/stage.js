@@ -7,7 +7,7 @@ const videos = [document.querySelector('#video-a'), document.querySelector('#vid
 const poseStack = document.querySelector('#pose-stack');
 const poseFrame = document.querySelector('#pose-frame');
 const waveFrames = [document.querySelector('#pose-wave-a'), document.querySelector('#pose-wave-b')];
-const poses = {eat:'/static/character-actions/eat.jpg',drink:'/static/character-actions/drink.jpg',wave:['/static/character-actions/wave-a.jpg','/static/character-actions/wave-b.jpg'],wavePortrait:['/static/character-actions/wave-portrait-a.jpg','/static/character-actions/wave-portrait-b.jpg'],laugh:'/static/character-actions/laugh.jpg',nod:'/static/character-actions/nod.jpg'};
+const poses = {talk:'/static/character-actions/xiaoman-v3-talk.jpg',eat:'/static/character-actions/xiaoman-v3-eat.jpg',drink:'/static/character-actions/xiaoman-v3-drink.jpg',wave:['/static/character-actions/xiaoman-v3-wave-a.jpg','/static/character-actions/xiaoman-v3-wave-b.jpg'],wavePortrait:['/static/character-actions/xiaoman-v3-wave-a.jpg','/static/character-actions/xiaoman-v3-wave-b.jpg'],laugh:'/static/character-actions/xiaoman-v3-laugh.jpg',nod:'/static/character-actions/xiaoman-v3-nod.jpg'};
 let sound = false, latest = null, activeVideo = 0, visualKey = '', poseKey = '', waveTimer = null, waveIndex = 0, soundKey = '', videoGeneration = 0;
 Object.values(poses).flat().forEach(url => { const preload = new Image(); preload.src = url; });
 let releaseSoundLock = null;
@@ -97,23 +97,29 @@ function updateVideo(data) {
 function updatePose(data) {
   const state = data.state;
   const action = state.action;
-  // An idle loop is not an action clip: keep the pose demo visible over it.
-  const pose = state.phase === 'action' && !data.media[action] ? poses[action] : null;
-  const key = pose ? `${state.job_id || ''}:${action}:${state.start}` : '';
+  const poseAction = state.phase === 'speaking' ? 'talk' : action;
+  const canShowPose = state.phase === 'action' || state.phase === 'speaking';
+  // An idle loop is not an action/talk clip: keep the matching pose above it.
+  const pose = canShowPose && !data.media[poseAction] ? poses[poseAction] : null;
+  const key = pose ? `${state.job_id || ''}:${poseAction}:${state.start}` : '';
   if (key === poseKey) return;
   poseKey = key;
   if (waveTimer) clearInterval(waveTimer);
   waveTimer = null;
-  poseStack.classList.remove('active');
+  poseStack.classList.remove('active','speaking');
   poseStack.removeAttribute('data-action');
   poseStack.style.removeProperty('--action-duration');
   poseFrame.removeAttribute('src');
   poseFrame.classList.remove('active');
   waveFrames.forEach(frame => { frame.classList.remove('active'); frame.removeAttribute('src'); });
   if (!pose) return;
-  poseStack.dataset.action = action;
+  poseStack.dataset.action = poseAction;
   poseStack.style.setProperty('--action-duration', `${Math.max(1, Number(state.duration) || 2)}s`);
-  if (action === 'wave') {
+  if (poseAction === 'talk') {
+    poseFrame.src = pose;
+    poseFrame.classList.add('active');
+    poseStack.classList.add('active','speaking');
+  } else if (poseAction === 'wave') {
     const frames = matchMedia('(max-aspect-ratio: 4/5)').matches ? poses.wavePortrait : poses.wave;
     waveIndex = 0;
     waveFrames.forEach((frame, index) => frame.src = frames[index]);
@@ -136,13 +142,15 @@ function render(data) {
   document.body.dataset.action = data.state.action;
   document.body.dataset.phase = data.state.phase;
   document.querySelector('#stage-name').textContent = data.config.name + '的片刻';
-  const hasBuiltInPose = data.state.phase === 'action' && poses[data.state.action] && !data.media[data.state.action];
+  const poseAction = data.state.phase === 'speaking' ? 'talk' : data.state.action;
+  const hasBuiltInPose = (data.state.phase === 'action' || data.state.phase === 'speaking')
+    && poses[poseAction] && !data.media[poseAction];
   const selectedMedia = data.state.phase === 'action' || data.state.phase === 'speaking'
-    ? data.media[data.state.action]
+    ? data.media[poseAction]
     : data.media.idle;
   document.querySelector('#mode-badge').textContent = selectedMedia
     ? (data.state.phase === 'action' ? '本地动作视频' : data.state.phase === 'speaking' ? '本地说话视频' : '本地待机视频')
-    : hasBuiltInPose ? '静态姿势示意 · 无连续动作' : data.media.idle ? '本地待机视频' : '原创角色 · 离线待机';
+    : hasBuiltInPose ? (data.state.phase === 'speaking' ? '说话表情 · 无口型同步' : '预制姿势 · 非连续动作') : data.media.idle ? '本地待机视频' : '原创角色 · 预制待机图';
   document.querySelector('#subtitle').textContent = data.config.subtitles ? data.state.text : '';
   document.querySelector('#stage-message').textContent = data.state.phase === 'thinking' ? '看见你的弹幕了…' : '';
   const activeJob = data.state.job_id && data.history.find(job => job.id === data.state.job_id);
@@ -152,11 +160,11 @@ function render(data) {
     action: data.media[data.state.action]
       ? ['正在播放动作', data.state.action === 'eat' ? '小满正在吃一口' : data.state.action === 'drink' ? '小满正在喝水' : data.state.action === 'wave' ? '小满正在挥手' : data.state.action === 'laugh' ? '小满笑了一下' : '小满点了点头', '动作来自你导入的本地视频素材。']
       : poses[data.state.action]
-        ? ['静态姿势示意', data.state.action === 'eat' ? '吃一口 · 姿势预览' : data.state.action === 'drink' ? '喝水 · 姿势预览' : data.state.action === 'wave' ? '挥手 · 姿势预览' : data.state.action === 'laugh' ? '微笑 · 表情预览' : '点头 · 姿势预览', '当前没有连续动作视频，所以画面只切换到对应姿势。导入同一角色的本地动作视频后才能展示连贯运动。']
+        ? ['预制姿势画面', data.state.action === 'eat' ? '吃一口 · 饼干姿势' : data.state.action === 'drink' ? '喝水 · 拿杯姿势' : data.state.action === 'wave' ? '挥手 · 双帧招呼' : data.state.action === 'laugh' ? '微笑 · 读到有趣的弹幕' : '点头 · 低头回应弹幕', '这是同一原创角色的预制画面，不是连续视频。导入本地动作视频后才会展示连贯运动。']
         : data.media.idle
           ? ['待机视频播放中', '还没有对应动作片段', '当前循环播放本地待机视频；导入这项动作的视频后可播放对应动作。']
           : ['正在准备回答', '马上回应这条弹幕', '台词由本机规则或你选用的本地模型生成。'],
-    speaking: ['正在回应', `${activeJob?.user || '直播间'}，小满回答你`, '声音与字幕同步；人物只有在导入说话视频时才会动。'],
+    speaking: ['正在回应', `${activeJob?.user || '直播间'}，小满回答你`, data.media.talk ? '正在播放本地说话视频。' : '当前显示单帧说话表情，声音与字幕同步，没有口型动画。'],
   };
   const [cardLabel, cardTitle, cardDescription] = labels[data.state.phase] || labels.idle;
   document.querySelector('#scene-card-label').textContent = cardLabel;

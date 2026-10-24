@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css?v=0.3.6"><script defer src="/static/app.js?v=0.3.6"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小满 · 本地直播工作台</title><link rel="stylesheet" href="/static/app.css?v=0.4.0"><script defer src="/static/app.js?v=0.4.0"></script></head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/"><span class="brand-mark">帧</span><span>小满直播间<small>MAC AI LIVE · LOCAL STUDIO</small></span></a>
@@ -23,10 +23,10 @@
       <div class="left-column">
         <section class="preview-card">
           <div class="card-heading"><div><span class="live-dot"></span> 画面预览 <span class="muted small">PREVIEW</span></div><span class="pill" id="preview-state">待机中</span></div>
-          <div class="preview-wrap"><iframe src="/stage?preview=1" title="数字人直播预览" id="preview"></iframe><span class="preview-tag">无动作视频时只展示静态姿势</span></div>
+          <div class="preview-wrap"><iframe src="/stage?preview=1" title="数字人直播预览" id="preview"></iframe><span class="preview-tag">动作会切换到对应姿势画面</span></div>
           <div class="transport"><div class="transport-info"><span id="run-dot" class="run-dot"></span><div><strong id="run-label">还没开始排练</strong><small id="run-description">预览静音 · 声音从独立直播窗口播放</small></div></div><button class="button primary" id="toggle-run">▶ 开始排练</button><button class="icon-button" id="interrupt" title="立即停止当前表演" aria-label="立即停止当前表演">■</button></div>
         </section>
-        <section class="quick-card"><div class="card-heading"><strong>动作排练</strong><span class="muted small">有本地动作视频时播放视频；否则只显示静态姿势</span></div><div class="action-buttons"><button data-action="wave"><span class="action-icon">👋</span><span class="action-label">挥挥手<small class="action-media-status">正在检查素材</small></span></button><button data-action="eat"><span class="action-icon">🍪</span><span class="action-label">吃一口<small class="action-media-status">正在检查素材</small></span></button><button data-action="drink"><span class="action-icon">☕</span><span class="action-label">喝口水<small class="action-media-status">正在检查素材</small></span></button><button data-action="laugh"><span class="action-icon">☺</span><span class="action-label">笑一笑<small class="action-media-status">正在检查素材</small></span></button><button data-action="nod"><span class="action-icon">✓</span><span class="action-label">点点头<small class="action-media-status">正在检查素材</small></span></button></div><div class="media-readiness"><span class="readiness-mark">▧</span><div><strong id="readiness-title">正在检查本地素材</strong><p id="readiness-copy">无动作视频时，点击只切换到静态姿势；导入同一角色的本地视频后才会有连贯运动。</p></div><button type="button" class="text-button" data-tab="assets">准备素材 →</button></div></section>
+        <section class="quick-card"><div class="card-heading"><strong>动作排练</strong><span class="muted small">每个按钮显示匹配姿势；挥手为双帧交替。连贯动作需本地视频。</span></div><div class="action-buttons"><button data-action="wave"><span class="action-icon">👋</span><span class="action-label">挥挥手<small class="action-media-status">正在检查素材</small></span></button><button data-action="eat"><span class="action-icon">🍪</span><span class="action-label">吃一口<small class="action-media-status">正在检查素材</small></span></button><button data-action="drink"><span class="action-icon">☕</span><span class="action-label">喝口水<small class="action-media-status">正在检查素材</small></span></button><button data-action="laugh"><span class="action-icon">☺</span><span class="action-label">笑一笑<small class="action-media-status">正在检查素材</small></span></button><button data-action="nod"><span class="action-icon">✓</span><span class="action-label">点点头<small class="action-media-status">正在检查素材</small></span></button></div><div class="media-readiness"><span class="readiness-mark">▧</span><div><strong id="readiness-title">正在检查本地素材</strong><p id="readiness-copy">没有动作视频时，会显示对应角色姿势；挥手两帧交替，说话显示匹配表情。都不是连续动作视频或实时口型。</p></div><button type="button" class="text-button" data-tab="assets">准备素材 →</button></div></section>
         <section class="history-card"><div class="card-heading"><strong>刚刚发生</strong><span class="muted small">最近 12 次互动</span></div><div id="history" class="history-list"><div class="empty">排练开始后，互动记录会留在这里。</div></div></section>
       </div>
       <aside class="interaction-card"><div class="card-heading"><strong>弹幕候场区 <span class="count" id="queue-count">0</span></strong><button class="text-button danger" id="clear">清空</button></div>
@@ -36,7 +36,7 @@
         <div class="queue-footer"><span class="tiny-dot"></span> 一次只表演一条，动作与说话有序衔接</div>
       </aside>
     </div>
-    <div class="bottom-note">✧ 每个动作都会先在舞台上响应，再播放回答。内置离线姿态是短时演示，不等于连续真人视频。</div>
+    <div class="bottom-note">✧ 动作会显示对应画面并衔接回答。当前是离线预制姿势，没有连续真人动作。</div>
   </section>
 
   <section class="tab-panel hidden" id="panel-assets">

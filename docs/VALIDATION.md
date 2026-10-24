@@ -1,3 +1,23 @@
+# v0.4.0 原创角色互动姿势与工作台实测
+
+日期：2026-10-25（Asia/Shanghai）。环境：Apple Silicon Mac、桌面 Chrome；全程不使用 GPU。
+
+## 本轮通过
+
+- 替换为统一原创写实角色，并补齐待机、吃饼干、喝水、双帧挥手、微笑、点头和说话七张配套图；舞台和素材卡共用同一组人物素材。
+- 在隔离端口 8767 和独立测试数据目录，用桌面 Chrome 逐个点击五个动作按钮。吃、喝、挥手、笑、点头均在 `/stage` 显示对应人物姿势，场景卡和观众弹幕同步更新；回答阶段进入说话表情和字幕。
+- 测试浏览器保持静音；本机 `say` + `afconvert` 为回答生成音频，但没有通过扬声器回放。独立测试队列已排空，未改变主工作台 8765 的队列。
+- 挥手使用两张相近画面交替，不是连续视频；吃、喝、点头、微笑和说话也都是预制画面，说话没有实时口型。舞台与工作台均明确显示这一边界。
+- `python3 -m unittest discover -s tests -v`：11 项通过；两份 JavaScript 语法检查、Python 编译与 `git diff --check` 通过。
+- 抖音官方 Mac 文档当前说明：Mac 版支持 macOS 13+、程序窗口采集和开播推流；窗口采集可选浏览器等已打开程序。[Mac 版说明](https://streamingtool.douyin.com/docs/8uxkey2t_mac) · [窗口捕获指南](https://streamingtool.douyin.com/docs/guide_window)
+
+## 仍未验收
+
+- 这轮没有登录抖音账号、选择直播伴侣窗口源、实测伴侣音量表或开始推流；真实账号步骤留给账号所有者。详细操作见 [DOUYIN-LIVE.md](DOUYIN-LIVE.md)。
+- 真实弹幕、Token API 和连续真人动作仍未接入。没有同一原创角色的视频时，本地离线方案只能展示这些预制姿势。
+
+---
+
 # v0.3.6 动作回退修正与纯 CPU 动画可行性测试
 
 日期：2026-10-25（Asia/Shanghai）。环境：Apple M4、16 GB 内存、桌面 Chrome；未使用 GPU / MPS。

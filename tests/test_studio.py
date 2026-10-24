@@ -155,23 +155,26 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(code, 404)
 
     def test_generated_character_assets_and_offline_pose_fallback(self):
-        code, body, headers = self.request("/static/character-xiaoman-v2.png")
-        self.assertEqual(code, 200)
-        self.assertTrue(body)
-        self.assertEqual(headers.get_content_type(), "image/png")
-        code, body, headers = self.request("/static/character-xiaoman-v2-thumb.jpg")
+        code, body, headers = self.request("/static/character-xiaoman-v3.jpg")
         self.assertEqual(code, 200)
         self.assertTrue(body)
         self.assertEqual(headers.get_content_type(), "image/jpeg")
-        for action_image in ("eat.jpg", "drink.jpg", "wave-a.jpg", "wave-b.jpg",
-                             "wave-portrait-a.jpg", "wave-portrait-b.jpg", "laugh.jpg", "nod.jpg"):
+        code, body, headers = self.request("/static/character-xiaoman-v3-thumb.jpg")
+        self.assertEqual(code, 200)
+        self.assertTrue(body)
+        self.assertEqual(headers.get_content_type(), "image/jpeg")
+        for action_image in ("xiaoman-v3-eat.jpg", "xiaoman-v3-drink.jpg",
+                             "xiaoman-v3-wave-a.jpg", "xiaoman-v3-wave-b.jpg",
+                             "xiaoman-v3-laugh.jpg", "xiaoman-v3-nod.jpg",
+                             "xiaoman-v3-talk.jpg"):
             code, body, headers = self.request("/static/character-actions/" + action_image)
             self.assertEqual(code, 200, action_image)
             self.assertTrue(body, action_image)
             self.assertEqual(headers.get_content_type(), "image/jpeg")
         code, body, _ = self.request("/stage")
         self.assertEqual(code, 200)
-        self.assertIn(b'/static/character-xiaoman-v2.png', body)
+        self.assertIn(b'/static/character-xiaoman-v3.jpg', body)
+        self.assertIn(b'v=0.4.0', body)
         self.assertIn(b'id="pose-stack"', body)
 
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg not installed")
