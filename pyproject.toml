@@ -1,6 +1,6 @@
 [project]
 name = "mac-ai-live"
-version = "0.6.0"
+version = "0.7.0"
 description = "Offline, CPU-only AI avatar livestream studio for macOS"
 requires-python = ">=3.9"
 dependencies = []

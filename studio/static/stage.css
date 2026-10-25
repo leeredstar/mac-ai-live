@@ -17,14 +17,14 @@ body{display:grid;place-items:center;background:#101612}.scene{position:relative
 body[data-phase="speaking"][data-video-active="false"] .face-motion .mouth-layer{animation:photo-drift 36s ease-in-out infinite alternate,idle-light 7s ease-in-out infinite,mouth-beat .34s ease-in-out infinite}
 body[data-video-active="true"] .face-motion{display:none}
 .pose-stack{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;overflow:hidden}
-.pose-stack.active{animation:pose-window var(--action-duration,2.4s) ease-in-out both}
+.pose-stack.active{animation:pose-window var(--action-duration,2.4s) linear both}
 .pose-stack.speaking.active{animation:none;opacity:1}
 .pose-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;opacity:0;transition:opacity .24s ease}
 .pose-frame.active{opacity:1}
 .wave-frame.active{opacity:1}
 .wave-frame{transition:opacity .08s linear}
 .stage-brand,.stage-badges,.scene-card,.viewer-message,.stage-message,.subtitle,.stage-footer,.enable-audio,.mute-audio{z-index:4}
-@keyframes pose-window{0%,100%{opacity:0}12%,74%{opacity:1}88%{opacity:0}}
+@keyframes pose-window{0%,100%{opacity:0}1%,99%{opacity:1}}
 @keyframes mouth-beat{0%,100%{opacity:.14}46%{opacity:.92}}
 .avatar-photo{animation:photo-drift 36s ease-in-out infinite alternate,idle-light 7s ease-in-out infinite}
 @keyframes idle-light{0%,100%{filter:brightness(1)}50%{filter:brightness(1.025)}}
@@ -33,8 +33,8 @@ body[data-video-active="true"] .face-motion{display:none}
 
 /* A dedicated Douyin portrait canvas also works inside a landscape Mac desktop. */
 body[data-layout="portrait"] .scene{width:min(100vw,56.25vh);height:min(100vh,177.7778vw);aspect-ratio:9/16;border-radius:0;box-shadow:none}
-body[data-layout="portrait"] .avatar-photo,body[data-layout="portrait"] .face-motion .face-layer,body[data-layout="portrait"] .pose-frame{object-position:79% center}
-body[data-layout="portrait"] .wave-frame{object-position:85% center}
+body[data-layout="portrait"] .avatar-photo,body[data-layout="portrait"] .face-motion .face-layer,body[data-layout="portrait"] .pose-frame{object-position:center center}
+body[data-layout="portrait"] .wave-frame{object-position:center center}
 body[data-layout="portrait"] .scene::after{background:linear-gradient(0deg,#101812a8 0%,#10181235 35%,transparent 66%),linear-gradient(180deg,#1018126b 0%,transparent 28%)}
 body[data-layout="portrait"] .stage-brand{left:5%;top:4%;font-size:clamp(18px,4.1cqw,25px)}
 body[data-layout="portrait"] .stage-brand small{font-size:clamp(9px,2.2cqw,13px)}
@@ -54,8 +54,9 @@ body[data-layout="portrait"] .subtitle{left:5%;right:5%;bottom:5%;font-size:clam
 body[data-layout="portrait"] .stage-footer{left:5%;right:5%;bottom:1.5%;font-size:clamp(8px,1.6cqw,10px)}
 body[data-layout="portrait"] .enable-audio{bottom:12%;font-size:12px;padding:11px 18px}
 body[data-layout="portrait"] .mute-audio{bottom:2%;right:4%}
-body[data-layout="portrait"] .face-motion .blink-layer{mask-image:radial-gradient(ellipse 9.4% 2.2% at 30% 37.7%,#000 55%,transparent 100%),radial-gradient(ellipse 9.4% 2.2% at 59% 39.8%,#000 55%,transparent 100%)}
-body[data-layout="portrait"] .face-motion .mouth-layer{mask-image:radial-gradient(ellipse 11.3% 2.3% at 52% 55.3%,#000 55%,transparent 100%)}
+body[data-layout="portrait"] .face-motion .blink-layer{mask-image:radial-gradient(ellipse 5.5% 1.8% at 47% 30.5%,#000 70%,transparent 100%),radial-gradient(ellipse 5.5% 1.8% at 63% 31.7%,#000 70%,transparent 100%)}
+body[data-layout="portrait"] .face-motion .mouth-layer{mask-image:radial-gradient(ellipse 8.2% 2.2% at 53% 40.5%,#000 62%,transparent 100%)}
+body[data-layout="portrait"][data-phase="speaking"][data-video-active="false"] .face-motion .mouth-layer{animation:none;opacity:0;transition:opacity .055s linear}
 
 /* Small camera breathing keeps a pose from feeling like a hard, frozen cut. */
 .pose-frame.active{transform-origin:70% 52%;will-change:transform}
