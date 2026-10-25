@@ -9,14 +9,14 @@ body{display:grid;place-items:center;background:#101612}.scene{position:relative
 /* Local pose sequences provide immediate action feedback without a GPU or external service. */
 .character-video{z-index:1}
 .scene::after{z-index:1}
-.face-motion{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.face-motion{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
 .face-motion .face-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;opacity:0;pointer-events:none;mask-repeat:no-repeat;mask-size:100% 100%;animation:photo-drift 36s ease-in-out infinite alternate,idle-light 7s ease-in-out infinite}
 .face-motion .blink-layer{mask-image:radial-gradient(ellipse 4.3% 2.2% at 67.5% 37.7%,#000 55%,transparent 100%),radial-gradient(ellipse 4.3% 2.2% at 77.5% 39.8%,#000 55%,transparent 100%);transition:opacity .045s linear}
 .face-motion .mouth-layer{mask-image:radial-gradient(ellipse 5.1% 2.3% at 71.5% 55.3%,#000 55%,transparent 100%)}
 .face-motion.blinking .blink-layer{opacity:1}
 body[data-phase="speaking"][data-video-active="false"] .face-motion .mouth-layer{animation:photo-drift 36s ease-in-out infinite alternate,idle-light 7s ease-in-out infinite,mouth-beat .34s ease-in-out infinite}
 body[data-video-active="true"] .face-motion{display:none}
-.pose-stack{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;overflow:hidden}
+.pose-stack{position:absolute;inset:0;z-index:2;opacity:0;pointer-events:none;overflow:hidden}
 .pose-stack.active{animation:pose-window var(--action-duration,2.4s) linear both}
 .pose-stack.speaking.active{animation:none;opacity:1}
 .pose-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;opacity:0;transition:opacity .24s ease}
@@ -59,13 +59,13 @@ body[data-layout="portrait"] .face-motion .mouth-layer{mask-image:radial-gradien
 body[data-layout="portrait"][data-phase="speaking"][data-video-active="false"] .face-motion .mouth-layer{animation:none;opacity:0;transition:opacity .055s linear}
 
 /* Small camera breathing keeps a pose from feeling like a hard, frozen cut. */
-.pose-frame.active{transform-origin:70% 52%;will-change:transform}
-.pose-stack.active[data-action="eat"] .pose-frame.active{animation:eat-camera 1.15s ease-in-out infinite}
-.pose-stack.active[data-action="drink"] .pose-frame.active{animation:drink-camera 1.75s ease-in-out infinite}
-.pose-stack.active[data-action="laugh"] .pose-frame.active{animation:laugh-camera .72s ease-in-out infinite}
-.pose-stack.active[data-action="nod"] .pose-frame.active{animation:nod-camera .85s ease-in-out infinite}
-@keyframes eat-camera{0%,100%{transform:scale(1.018) translateY(0)}38%{transform:scale(1.034) translateY(-.32%)}70%{transform:scale(1.025) translateY(.12%)}}
-@keyframes drink-camera{0%,100%{transform:scale(1.02) rotate(-.12deg)}50%{transform:scale(1.034) rotate(.12deg)}}
-@keyframes laugh-camera{0%,100%{transform:scale(1.02) translateY(0)}50%{transform:scale(1.032) translateY(-.38%) rotate(.08deg)}}
-@keyframes nod-camera{0%,100%{transform:scale(1.02) translateY(0)}48%{transform:scale(1.032) translateY(.72%)}70%{transform:scale(1.027) translateY(.18%)}}
+.pose-frame.active{transform-origin:53% 42%;will-change:transform}
+.pose-stack.active[data-action="eat"] .pose-frame.active{animation:eat-camera 1.05s ease-in-out infinite}
+.pose-stack.active[data-action="drink"] .pose-frame.active{animation:drink-camera 1.55s ease-in-out infinite}
+.pose-stack.active[data-action="laugh"] .pose-frame.active{animation:laugh-camera .78s ease-in-out infinite}
+.pose-stack.active[data-action="nod"] .pose-frame.active{animation:nod-camera .78s ease-in-out infinite}
+@keyframes eat-camera{0%,100%{transform:scale(1.018) translateY(0)}32%{transform:scale(1.055) translateY(-1.25%) translateX(.3%)}62%{transform:scale(1.045) translateY(.15%)}82%{transform:scale(1.025) translateY(.85%)}}
+@keyframes drink-camera{0%,100%{transform:scale(1.02) translateY(0)}42%{transform:scale(1.052) translateY(-.75%)}68%{transform:scale(1.045) translateY(.5%)}}
+@keyframes laugh-camera{0%,100%{transform:scale(1.018) translateY(0)}48%{transform:scale(1.052) translateY(-1.05%) rotate(.18deg)}76%{transform:scale(1.03) translateY(.4%)}}
+@keyframes nod-camera{0%,100%{transform:scale(1.02) translateY(0)}42%{transform:scale(1.045) translateY(1.15%) rotate(.28deg)}68%{transform:scale(1.035) translateY(.2%) rotate(0)}}
 @media(prefers-reduced-motion:reduce){.avatar-photo,.face-motion .face-layer,.pose-stack.active,.pose-frame.active{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

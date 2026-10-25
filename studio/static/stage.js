@@ -80,7 +80,7 @@ function updateFaceMotion(data) {
   const slot = state.phase === 'speaking' || state.phase === 'action' ? state.action : 'idle';
   const hasVideo = Boolean(data.media[slot] || (slot !== 'idle' && data.media.idle));
   document.body.dataset.videoActive = hasVideo ? 'true' : 'false';
-  const nextBlinkMode = !hasVideo && (state.phase === 'idle' || state.phase === 'thinking') ? 'idle' : 'none';
+  const nextBlinkMode = !hasVideo && ['idle', 'thinking', 'action', 'speaking'].includes(state.phase) ? 'idle' : 'none';
   if (nextBlinkMode !== blinkMode) {
     clearBlinkTimers(); blinkMode = nextBlinkMode;
     if (blinkMode === 'idle') scheduleBlink();
