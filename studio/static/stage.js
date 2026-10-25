@@ -13,10 +13,12 @@ const mouthLayer = document.querySelector('.mouth-layer');
 const videos = [document.querySelector('#video-a'), document.querySelector('#video-b')];
 const poseStack = document.querySelector('#pose-stack');
 const poseFrame = document.querySelector('#pose-frame');
+const waveSprite = document.querySelector('#pose-wave-sprite');
 const faceMotion = document.querySelector('#face-motion');
 const waveFrames = [document.querySelector('#pose-wave-a'), document.querySelector('#pose-wave-b')];
 const landscapePoses = {talk:'/static/character-actions/xiaoman-v3-talk.jpg',eat:'/static/character-actions/xiaoman-v3-eat.jpg',drink:'/static/character-actions/xiaoman-v3-drink.jpg',wave:['/static/character-actions/xiaoman-v3-wave-a.jpg','/static/character-actions/xiaoman-v3-wave-b.jpg'],laugh:'/static/character-actions/xiaoman-v3-laugh.jpg',nod:'/static/character-actions/xiaoman-v3-nod.jpg'};
 const portraitPoses = {talk:'/static/character-actions/xiaoman-v4-talk.jpg',eat:'/static/character-actions/xiaoman-v4-eat.jpg',drink:'/static/character-actions/xiaoman-v4-drink.jpg',wave:['/static/character-actions/xiaoman-v4-wave-a.jpg','/static/character-actions/xiaoman-v4-wave-b.jpg'],laugh:'/static/character-actions/xiaoman-v4-laugh.jpg',nod:'/static/character-actions/xiaoman-v4-nod.jpg'};
+const portraitWaveSheet = '/static/character-actions/xiaoman-v5-wave-sheet.png';
 const poses = portraitMode ? portraitPoses : landscapePoses;
 if (portraitMode) {
   avatarPhoto.src = '/static/character-xiaoman-v4-portrait.jpg';
@@ -26,7 +28,7 @@ if (portraitMode) {
 let sound = false, latest = null, activeVideo = 0, visualKey = '', poseKey = '', waveTimer = null, waveIndex = 0, soundKey = '', videoGeneration = 0, blinkTimer = null, blinkResetTimer = null, blinkMode = '';
 let audioContext = null, audioAnalyser = null, audioSource = null, audioOutputGain = null, mouthFrame = null;
 Object.values(poses).flat().forEach(url => { const preload = new Image(); preload.src = url; });
-if (portraitMode) ['/static/character-actions/xiaoman-v4-blink.jpg', '/static/character-actions/xiaoman-v4-talk.jpg'].forEach(url => { const preload = new Image(); preload.src = url; });
+if (portraitMode) ['/static/character-actions/xiaoman-v4-blink.jpg', '/static/character-actions/xiaoman-v4-talk.jpg', portraitWaveSheet].forEach(url => { const preload = new Image(); preload.src = url; });
 function stopMouthTracking() {
   if (mouthFrame !== null) cancelAnimationFrame(mouthFrame);
   mouthFrame = null;
@@ -195,6 +197,9 @@ function updatePose(data) {
   poseFrame.removeAttribute('src');
   poseFrame.classList.remove('active');
   waveFrames.forEach(frame => { frame.classList.remove('active'); frame.removeAttribute('src'); });
+  waveSprite.classList.remove('active');
+  waveSprite.style.removeProperty('background-image');
+  waveSprite.removeAttribute('data-frame');
   if (!pose) return;
   poseStack.dataset.action = poseAction;
   poseStack.style.setProperty('--action-duration', `${Math.max(1, Number(state.duration) || 2)}s`);
@@ -203,16 +208,28 @@ function updatePose(data) {
     poseFrame.classList.add('active');
     poseStack.classList.add('active','speaking');
   } else if (poseAction === 'wave') {
-    const frames = poses.wave;
-    waveIndex = 0;
-    waveFrames.forEach((frame, index) => frame.src = frames[index]);
-    waveFrames[0].classList.add('active');
     poseStack.classList.add('active');
-    waveTimer = setInterval(() => {
-      waveFrames[waveIndex].classList.remove('active');
-      waveIndex = 1 - waveIndex;
-      waveFrames[waveIndex].classList.add('active');
-    }, 430);
+    if (portraitMode) {
+      const sequence = [0, 1, 2, 3, 2, 1];
+      let sequenceIndex = 0;
+      waveSprite.style.backgroundImage = `url("${portraitWaveSheet}")`;
+      waveSprite.dataset.frame = String(sequence[0]);
+      waveSprite.classList.add('active');
+      waveTimer = setInterval(() => {
+        sequenceIndex = (sequenceIndex + 1) % sequence.length;
+        waveSprite.dataset.frame = String(sequence[sequenceIndex]);
+      }, 200);
+    } else {
+      const frames = poses.wave;
+      waveIndex = 0;
+      waveFrames.forEach((frame, index) => frame.src = frames[index]);
+      waveFrames[0].classList.add('active');
+      waveTimer = setInterval(() => {
+        waveFrames[waveIndex].classList.remove('active');
+        waveIndex = 1 - waveIndex;
+        waveFrames[waveIndex].classList.add('active');
+      }, 430);
+    }
   } else {
     poseFrame.src = pose;
     poseFrame.classList.add('active');
@@ -244,7 +261,7 @@ function render(data) {
     action: data.media[data.state.action]
       ? ['正在播放动作', data.state.action === 'eat' ? '小满正在吃一口' : data.state.action === 'drink' ? '小满正在喝水' : data.state.action === 'wave' ? '小满正在挥手' : data.state.action === 'laugh' ? '小满笑了一下' : '小满点了点头', '动作来自你导入的本地视频素材。']
       : poses[data.state.action]
-        ? ['预制姿势画面', data.state.action === 'eat' ? '吃一口 · 饼干姿势' : data.state.action === 'drink' ? '喝水 · 拿杯姿势' : data.state.action === 'wave' ? '挥手 · 双帧招呼' : data.state.action === 'laugh' ? '微笑 · 读到有趣的弹幕' : '点头 · 低头回应弹幕', '这是同一原创角色的预制画面，不是连续视频。导入本地动作视频后才会展示连贯运动。']
+        ? ['预制姿势画面', data.state.action === 'eat' ? '吃一口 · 饼干姿势' : data.state.action === 'drink' ? '喝水 · 拿杯姿势' : data.state.action === 'wave' ? '挥手 · 四帧招呼' : data.state.action === 'laugh' ? '微笑 · 读到有趣的弹幕' : '点头 · 低头回应弹幕', '这是同一原创角色的预制画面，不是连续视频。导入本地动作视频后才会展示连贯运动。']
         : data.media.idle
           ? ['待机视频播放中', '还没有对应动作片段', '当前循环播放本地待机视频；导入这项动作的视频后可播放对应动作。']
           : ['正在准备回答', '马上回应这条弹幕', '台词由本机规则或你选用的本地模型生成。'],

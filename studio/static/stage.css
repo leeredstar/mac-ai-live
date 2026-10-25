@@ -23,6 +23,12 @@ body[data-video-active="true"] .face-motion{display:none}
 .pose-frame.active{opacity:1}
 .wave-frame.active{opacity:1}
 .wave-frame{transition:opacity .08s linear}
+.wave-sprite-frame{position:absolute;inset:0;opacity:0;background-repeat:no-repeat;background-size:202% 202%;pointer-events:none}
+.wave-sprite-frame.active{opacity:1}
+.wave-sprite-frame[data-frame="0"]{background-position:0 0}
+.wave-sprite-frame[data-frame="1"]{background-position:100% 0}
+.wave-sprite-frame[data-frame="2"]{background-position:0 100%}
+.wave-sprite-frame[data-frame="3"]{background-position:100% 100%}
 .stage-brand,.stage-badges,.scene-card,.viewer-message,.stage-message,.subtitle,.stage-footer,.enable-audio,.mute-audio{z-index:4}
 @keyframes pose-window{0%,100%{opacity:0}1%,99%{opacity:1}}
 @keyframes mouth-beat{0%,100%{opacity:.14}46%{opacity:.92}}
